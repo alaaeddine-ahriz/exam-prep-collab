@@ -1,0 +1,32 @@
+# Environment Configuration
+# Copy this file to .env.local and fill in your values
+
+# ============================================
+# Data Provider Selection
+# ============================================
+# Options: "sqlite" or "supabase"
+# If not set, defaults based on NODE_ENV:
+#   - development: sqlite
+#   - production: supabase
+NEXT_PUBLIC_DATA_PROVIDER=sqlite
+
+# ============================================
+# SQLite Configuration (for development)
+# ============================================
+# Path to SQLite database file (relative to project root)
+SQLITE_DB_PATH=data/examprep.db
+
+# ============================================
+# Supabase Configuration (for production)
+# ============================================
+# Get these from your Supabase project settings
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+
+# ============================================
+# Optional: Supabase Service Role Key
+# ============================================
+# Only needed for admin operations (migrations, seeding production)
+# NEVER expose this in client-side code
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+

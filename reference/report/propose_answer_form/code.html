@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Report/Propose Answer Form</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2bcdee",
+            "background-light": "#f6f8f8",
+            "background-dark": "#101f22",
+            "text-light-primary": "#101f22",
+            "text-light-secondary": "#6b7f83",
+            "text-dark-primary": "#e0e7e8",
+            "text-dark-secondary": "#8c9a9d",
+            "border-light": "#e3e8e8",
+            "border-dark": "#2a3b3e",
+            "component-bg-light": "#ffffff",
+            "component-bg-dark": "#1a2c2f",
+            "component-bg-light-subtle": "#e9f0f1",
+            "component-bg-dark-subtle": "#1d3034",
+          },
+          fontFamily: {
+            "display": ["Lexend", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      font-size: 24px;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-gray-800/50 font-display">
+<div class="relative mx-auto flex h-auto min-h-screen w-full max-w-md flex-col justify-end bg-transparent group/design-root" style="min-height: 812px;">
+<!-- This div simulates the screen content behind the bottom sheet -->
+<div class="absolute inset-x-0 top-0 flex h-full flex-col bg-background-light dark:bg-background-dark p-4 pt-16">
+<h1 class="text-2xl font-bold text-text-light-primary dark:text-text-dark-primary">Question 12</h1>
+<p class="mt-2 text-text-light-secondary dark:text-text-dark-secondary">What is the capital of France?</p>
+<div class="mt-4 space-y-2">
+<div class="rounded-lg border border-border-light dark:border-border-dark bg-component-bg-light dark:bg-component-bg-dark p-4 text-text-light-primary dark:text-text-dark-primary">London</div>
+<div class="rounded-lg border border-primary bg-primary/10 p-4 text-text-light-primary dark:text-text-dark-primary">Paris</div>
+<div class="rounded-lg border border-border-light dark:border-border-dark bg-component-bg-light dark:bg-component-bg-dark p-4 text-text-light-primary dark:text-text-dark-primary">Berlin</div>
+</div>
+</div>
+<!-- End of background screen content -->
+<div class="relative flex h-full w-full flex-col justify-end">
+<div class="flex flex-col rounded-t-xl bg-background-light dark:bg-background-dark shadow-2xl">
+<!-- BottomSheetHandle -->
+<div class="flex h-5 w-full items-center justify-center pt-3">
+<div class="h-1 w-9 rounded-full bg-border-light dark:bg-border-dark"></div>
+</div>
+<!-- TopAppBar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2">
+<div class="flex w-12 items-center justify-start">
+<button class="flex size-10 cursor-pointer items-center justify-center rounded-full bg-component-bg-light-subtle dark:bg-component-bg-dark-subtle text-text-light-primary dark:text-text-dark-primary">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<h2 class="flex-1 text-center text-lg font-bold leading-tight tracking-[-0.015em] text-text-light-primary dark:text-text-dark-primary">Provide Feedback</h2>
+<div class="w-12"></div>
+</div>
+<!-- SegmentedButtons -->
+<div class="flex px-4 py-3">
+<div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-component-bg-light-subtle dark:bg-component-bg-dark-subtle p-1">
+<label class="flex h-full flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-md px-2 text-sm font-medium leading-normal text-text-light-secondary dark:text-text-dark-secondary has-[:checked]:bg-component-bg-light has-[:checked]:text-text-light-primary has-[:checked]:shadow-sm dark:has-[:checked]:bg-component-bg-dark dark:has-[:checked]:text-text-dark-primary">
+<span class="truncate">Report Issue</span>
+<input checked="" class="invisible w-0" name="feedback-type" type="radio" value="Report Issue"/>
+</label>
+<label class="flex h-full flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-md px-2 text-sm font-medium leading-normal text-text-light-secondary dark:text-text-dark-secondary has-[:checked]:bg-component-bg-light has-[:checked]:text-text-light-primary has-[:checked]:shadow-sm dark:has-[:checked]:bg-component-bg-dark dark:has-[:checked]:text-text-dark-primary">
+<span class="truncate">Propose Answer</span>
+<input class="invisible w-0" name="feedback-type" type="radio" value="Propose Answer"/>
+</label>
+</div>
+</div>
+<!-- TextField -->
+<div class="flex max-w-full flex-wrap items-end gap-4 px-4 py-3">
+<label class="flex w-full flex-col">
+<p class="pb-2 text-base font-medium leading-normal text-text-light-primary dark:text-text-dark-primary">Description</p>
+<textarea class="form-input flex min-h-36 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-border-light bg-component-bg-light p-4 text-base font-normal leading-normal text-text-light-primary placeholder:text-text-light-secondary focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-border-dark dark:bg-component-bg-dark dark:text-text-dark-primary dark:placeholder:text-text-dark-secondary dark:focus:border-primary" placeholder="Please explain the issue. Is there a typo, is the information outdated, or is the question unclear?"></textarea>
+</label>
+</div>
+<!-- MetaText (Character Counter) -->
+<p class="px-4 pb-3 pt-1 text-right text-sm font-normal leading-normal text-text-light-secondary dark:text-text-dark-secondary">0/500</p>
+<!-- Submit Button -->
+<div class="flex flex-col items-stretch px-4 pb-8 pt-2">
+<button class="flex h-12 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-primary text-base font-bold leading-normal tracking-wide text-white transition-opacity duration-200 ease-in-out hover:opacity-90">Submit Feedback</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

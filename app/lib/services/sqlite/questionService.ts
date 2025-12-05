@@ -173,7 +173,7 @@ export class SQLiteQuestionService implements IQuestionService {
 
     db.prepare(`
       INSERT INTO saq_answers (id, question_id, text, vote_count, created_by)
-      VALUES (?, ?, ?, 1, ?)
+      VALUES (?, ?, ?, 0, ?)
     `).run(answerId, dto.questionId, dto.text, dto.createdBy);
 
     return (await this.getQuestionById(dto.questionId))!;

@@ -169,7 +169,7 @@ export class SupabaseQuestionService implements IQuestionService {
       id: answerId,
       question_id: dto.questionId,
       text: dto.text,
-      vote_count: 1,
+      vote_count: 0,
       created_by: dto.createdBy,
     });
 

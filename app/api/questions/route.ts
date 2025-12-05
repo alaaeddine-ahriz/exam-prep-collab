@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataService } from "@/app/lib/services";
 
+// CORS headers for admin tool access
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const service = await getDataService();
@@ -17,10 +29,10 @@ export async function GET(request: NextRequest) {
       questions = await service.questions.getAllQuestions();
     }
 
-    return NextResponse.json(questions);
+    return NextResponse.json(questions, { headers: corsHeaders });
   } catch (error) {
     console.error("Error fetching questions:", error);
-    return NextResponse.json({ error: "Failed to fetch questions" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch questions" }, { status: 500, headers: corsHeaders });
   }
 }
 
@@ -43,10 +55,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(question, { status: 201 });
+    return NextResponse.json(question, { status: 201, headers: corsHeaders });
   } catch (error) {
     console.error("Error creating question:", error);
-    return NextResponse.json({ error: "Failed to create question" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create question" }, { status: 500, headers: corsHeaders });
   }
 }
 

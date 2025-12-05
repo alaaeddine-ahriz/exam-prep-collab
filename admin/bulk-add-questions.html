@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExamPrep Admin - Bulk Add Questions</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #0f3460;
+      --text-primary: #eaeaea;
+      --text-secondary: #a0a0a0;
+      --accent: #e94560;
+      --accent-hover: #ff6b6b;
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
+      --border: #2a2a4a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+    }
+
+    .config-section {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .config-section h2 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .input-group label {
+      font-weight: 500;
+    }
+
+    .input-group input {
+      flex: 1;
+      min-width: 300px;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .panel h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel h2 .badge {
+      background: var(--accent);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 400px;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .preview-container {
+      height: 400px;
+      overflow-y: auto;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .question-preview {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .question-preview:last-child {
+      margin-bottom: 0;
+    }
+
+    .question-type {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .question-type.mcq {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .question-type.saq {
+      background: #8b5cf6;
+      color: white;
+    }
+
+    .question-text {
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .options-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .options-list li {
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .options-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .option-id {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .created-by {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--border);
+    }
+
+    .status {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+    }
+
+    .status.success {
+      display: block;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .status.error {
+      display: block;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+
+    .status.loading {
+      display: block;
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid var(--warning);
+      color: var(--warning);
+    }
+
+    .json-error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .template-section {
+      margin-top: 1rem;
+    }
+
+    .template-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .template-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-btn:hover {
+      background: var(--border);
+    }
+
+    .help-text {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .progress-bar.active {
+      display: block;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    .empty-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎓 ExamPrep Admin</h1>
+      <p class="subtitle">Bulk Add Questions</p>
+    </header>
+
+    <div class="config-section">
+      <h2>⚙️ API Configuration</h2>
+      <div class="input-group">
+        <label for="apiUrl">API Base URL:</label>
+        <input type="text" id="apiUrl" value="http://localhost:3000" placeholder="http://localhost:3000">
+      </div>
+      <p class="help-text">Make sure your Next.js dev server is running at this URL</p>
+    </div>
+
+    <div class="main-content">
+      <div class="panel">
+        <h2>📝 JSON Input <span class="badge" id="questionCount">0 questions</span></h2>
+        <textarea id="jsonInput" placeholder="Paste your questions JSON here..."></textarea>
+        <div class="json-error" id="jsonError"></div>
+        
+        <div class="template-section">
+          <div class="template-buttons">
+            <button class="template-btn" onclick="loadMCQTemplate()">MCQ Template</button>
+            <button class="template-btn" onclick="loadSAQTemplate()">SAQ Template</button>
+            <button class="template-btn" onclick="loadMixedTemplate()">Mixed Template</button>
+            <button class="template-btn" onclick="clearInput()">Clear</button>
+          </div>
+          <p class="help-text">
+            <strong>MCQ format:</strong> type, question, createdBy, options (array with id, text)<br>
+            <strong>SAQ format:</strong> type, question, createdBy, answers (optional, array with id, text, votes, createdBy)
+          </p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>👁️ Preview</h2>
+        <div class="preview-container" id="preview">
+          <div class="empty-preview">
+            <div>
+              <p>📋 Your questions will appear here</p>
+              <p style="font-size: 0.85rem; margin-top: 0.5rem;">Enter valid JSON on the left</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-secondary" onclick="validateJSON()">✓ Validate JSON</button>
+      <button class="btn-primary" id="submitBtn" onclick="submitQuestions()">🚀 Submit Questions</button>
+    </div>
+
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const jsonInput = document.getElementById('jsonInput');
+    const preview = document.getElementById('preview');
+    const jsonError = document.getElementById('jsonError');
+    const questionCount = document.getElementById('questionCount');
+    const status = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+
+    // Templates
+    const MCQ_TEMPLATE = [
+      {
+        "type": "mcq",
+        "question": "What is the capital of France?",
+        "createdBy": "Professor Smith",
+        "options": [
+          { "id": "a", "text": "London" },
+          { "id": "b", "text": "Paris" },
+          { "id": "c", "text": "Berlin" },
+          { "id": "d", "text": "Madrid" }
+        ]
+      }
+    ];
+
+    const SAQ_TEMPLATE = [
+      {
+        "type": "saq",
+        "question": "Explain the concept of object-oriented programming.",
+        "createdBy": "Professor Johnson"
+      }
+    ];
+
+    const MIXED_TEMPLATE = [
+      {
+        "type": "mcq",
+        "question": "Which programming paradigm focuses on objects and classes?",
+        "createdBy": "Professor Smith",
+        "options": [
+          { "id": "a", "text": "Functional Programming" },
+          { "id": "b", "text": "Object-Oriented Programming" },
+          { "id": "c", "text": "Procedural Programming" },
+          { "id": "d", "text": "Logic Programming" }
+        ]
+      },
+      {
+        "type": "saq",
+        "question": "Describe the four pillars of object-oriented programming.",
+        "createdBy": "Professor Johnson"
+      },
+      {
+        "type": "mcq",
+        "question": "What does HTML stand for?",
+        "createdBy": "Student A",
+        "options": [
+          { "id": "a", "text": "Hyper Text Markup Language" },
+          { "id": "b", "text": "High Tech Modern Language" },
+          { "id": "c", "text": "Home Tool Markup Language" },
+          { "id": "d", "text": "Hyperlink Text Making Language" }
+        ]
+      }
+    ];
+
+    function loadMCQTemplate() {
+      jsonInput.value = JSON.stringify(MCQ_TEMPLATE, null, 2);
+      parseAndPreview();
+    }
+
+    function loadSAQTemplate() {
+      jsonInput.value = JSON.stringify(SAQ_TEMPLATE, null, 2);
+      parseAndPreview();
+    }
+
+    function loadMixedTemplate() {
+      jsonInput.value = JSON.stringify(MIXED_TEMPLATE, null, 2);
+      parseAndPreview();
+    }
+
+    function clearInput() {
+      jsonInput.value = '';
+      preview.innerHTML = `
+        <div class="empty-preview">
+          <div>
+            <p>📋 Your questions will appear here</p>
+            <p style="font-size: 0.85rem; margin-top: 0.5rem;">Enter valid JSON on the left</p>
+          </div>
+        </div>
+      `;
+      jsonError.textContent = '';
+      questionCount.textContent = '0 questions';
+      hideStatus();
+    }
+
+    function parseAndPreview() {
+      const input = jsonInput.value.trim();
+      
+      if (!input) {
+        clearInput();
+        return null;
+      }
+
+      try {
+        let questions = JSON.parse(input);
+        
+        // Handle single object (wrap in array)
+        if (!Array.isArray(questions)) {
+          questions = [questions];
+        }
+
+        // Validate questions
+        const errors = validateQuestions(questions);
+        if (errors.length > 0) {
+          jsonError.textContent = errors.join('; ');
+          return null;
+        }
+
+        jsonError.textContent = '';
+        questionCount.textContent = `${questions.length} question${questions.length !== 1 ? 's' : ''}`;
+        
+        // Render preview
+        preview.innerHTML = questions.map((q, i) => renderQuestionPreview(q, i)).join('');
+        
+        return questions;
+      } catch (e) {
+        jsonError.textContent = `JSON Parse Error: ${e.message}`;
+        questionCount.textContent = '0 questions';
+        return null;
+      }
+    }
+
+    function validateQuestions(questions) {
+      const errors = [];
+      
+      questions.forEach((q, i) => {
+        if (!q.type) errors.push(`Q${i + 1}: missing 'type'`);
+        if (!q.question) errors.push(`Q${i + 1}: missing 'question'`);
+        if (!q.createdBy) errors.push(`Q${i + 1}: missing 'createdBy'`);
+        
+        if (q.type === 'mcq') {
+          if (!q.options || !Array.isArray(q.options)) {
+            errors.push(`Q${i + 1}: MCQ must have 'options' array`);
+          } else if (q.options.length < 2) {
+            errors.push(`Q${i + 1}: MCQ must have at least 2 options`);
+          } else {
+            q.options.forEach((opt, j) => {
+              if (!opt.id) errors.push(`Q${i + 1} Option ${j + 1}: missing 'id'`);
+              if (!opt.text) errors.push(`Q${i + 1} Option ${j + 1}: missing 'text'`);
+            });
+          }
+        } else if (q.type !== 'saq') {
+          errors.push(`Q${i + 1}: type must be 'mcq' or 'saq'`);
+        }
+      });
+      
+      return errors;
+    }
+
+    function renderQuestionPreview(q, index) {
+      let optionsHtml = '';
+      
+      if (q.type === 'mcq' && q.options) {
+        optionsHtml = `
+          <ul class="options-list">
+            ${q.options.map(opt => `
+              <li><span class="option-id">${opt.id}.</span> ${escapeHtml(opt.text)}</li>
+            `).join('')}
+          </ul>
+        `;
+      }
+      
+      return `
+        <div class="question-preview">
+          <span class="question-type ${q.type}">${q.type}</span>
+          <div class="question-text">${index + 1}. ${escapeHtml(q.question)}</div>
+          ${optionsHtml}
+          <div class="created-by">Created by: ${escapeHtml(q.createdBy)}</div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function validateJSON() {
+      const questions = parseAndPreview();
+      if (questions) {
+        showStatus('success', `✓ Valid JSON with ${questions.length} question(s)`);
+      } else {
+        showStatus('error', '✗ Invalid JSON or questions format');
+      }
+    }
+
+    async function submitQuestions() {
+      const questions = parseAndPreview();
+      
+      if (!questions || questions.length === 0) {
+        showStatus('error', 'No valid questions to submit');
+        return;
+      }
+
+      const apiUrl = document.getElementById('apiUrl').value.trim();
+      if (!apiUrl) {
+        showStatus('error', 'Please enter the API base URL');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      progressBar.classList.add('active');
+      showStatus('loading', `Submitting ${questions.length} questions...`);
+
+      let successCount = 0;
+      let errorCount = 0;
+      const errors = [];
+
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        const progress = ((i + 1) / questions.length) * 100;
+        progressFill.style.width = `${progress}%`;
+
+        try {
+          const response = await fetch(`${apiUrl}/api/questions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(q),
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            errorCount++;
+            const errorData = await response.json().catch(() => ({}));
+            errors.push(`Q${i + 1}: ${errorData.error || response.statusText}`);
+          }
+        } catch (e) {
+          errorCount++;
+          errors.push(`Q${i + 1}: ${e.message}`);
+        }
+      }
+
+      submitBtn.disabled = false;
+      
+      setTimeout(() => {
+        progressBar.classList.remove('active');
+        progressFill.style.width = '0%';
+      }, 500);
+
+      if (errorCount === 0) {
+        showStatus('success', `🎉 Successfully added ${successCount} question(s)!`);
+        // Clear input on complete success
+        setTimeout(() => clearInput(), 2000);
+      } else if (successCount === 0) {
+        showStatus('error', `Failed to add questions: ${errors.join('; ')}`);
+      } else {
+        showStatus('error', `Added ${successCount}, failed ${errorCount}: ${errors.join('; ')}`);
+      }
+    }
+
+    function showStatus(type, message) {
+      status.className = `status ${type}`;
+      status.textContent = message;
+    }
+
+    function hideStatus() {
+      status.className = 'status';
+    }
+
+    // Live preview on input
+    jsonInput.addEventListener('input', () => {
+      parseAndPreview();
+      hideStatus();
+    });
+
+    // Initialize with empty state
+    clearInput();
+  </script>
+</body>
+</html>

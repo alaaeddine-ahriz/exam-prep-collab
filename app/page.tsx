@@ -3,8 +3,6 @@
 import { useRouter } from "next/navigation";
 import {
   Button,
-  FeatureCard,
-  PageIndicator,
   Icon,
 } from "./components";
 import { useAuth } from "./context/AuthContext";
@@ -22,47 +20,23 @@ export default function Home() {
     );
   }
 
-  // Redirect authenticated users to questions
+  // Authenticated users home screen
   if (isAuthenticated) {
     return (
-      <div className="flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
-        {/* Hero Image */}
-        <div className="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden min-h-64"
-          style={{
-            backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuCanXF9RJnANKIOY3UP9OY_YO5kXLg4L7f3f9UKit_HDfr7C68pu2lOP0oKX-8v5fjLWQVYwNWIMzQJJ_HYHsCxq7x_ufm0PR8nRQP0QlCZAbvK8hknqSLoyvcL0UHV3OQFjD2ILC1wpZnn7xfceGO6kSANbIb4sWZAmN-GaUOcOmDhReA0raipc7Pdeawf6CfFjMYpn6HZ6H-grM91XF5I_XhBFFzLrlj3A6G7lzuiL65Aknc1klUEOClZtLvEWoI-F3LDAu4_-Bo")`
-          }}
-        />
-
-        {/* Content */}
-        <div className="flex flex-col flex-1 px-4">
-          <div className="flex items-center justify-center gap-2 pt-6 pb-2">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-              {user?.email?.charAt(0).toUpperCase() || "U"}
-            </div>
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
+        <div className="flex flex-col items-center w-full max-w-sm">
+          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg mb-2">
+            {user?.email?.charAt(0).toUpperCase() || "U"}
           </div>
           <h1 className="text-text-primary-light dark:text-text-primary-dark tracking-tight text-2xl font-bold leading-tight text-center pb-2">
             Welcome back!
           </h1>
-          <p className="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal leading-normal pb-3 text-center">
+          <p className="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal leading-normal pb-8 text-center">
             {user?.email}
           </p>
 
-          {/* Feature Cards */}
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 py-4">
-            <FeatureCard
-              icon="quiz"
-              title="Question Bank"
-              description="Browse and vote on exam questions."
-            />
-            <FeatureCard
-              icon="play_arrow"
-              title="Practice Mode"
-              description="Test yourself with quizzes."
-            />
-          </div>
-
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 mt-auto pb-8">
+          <div className="flex flex-col gap-3 w-full">
             <Button variant="primary" fullWidth onClick={() => router.push("/questions")}>
               <Icon name="quiz" size="sm" />
               Go to Question Bank

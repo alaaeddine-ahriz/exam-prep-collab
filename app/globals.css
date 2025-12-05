@@ -6,7 +6,7 @@
   --color-primary-hover: #22b8d6;
   
   --color-background-light: #f6f8f8;
-  --color-background-dark: #101f22;
+  --color-background-dark: #0b131a;
   
   --color-surface-light: #ffffff;
   --color-surface-dark: #1a2c2f;
@@ -17,12 +17,13 @@
   --color-text-secondary-dark: #94c2cc;
   
   --color-border-light: #cfe3e7;
-  --color-border-dark: #3a5b63;
+  --color-border-dark: #152224;
   
   --color-success: #34C759;
   --color-warning: #FF9500;
   --color-error: #FF3B30;
   
+
   /* Font */
   --font-display: "Lexend", sans-serif;
   

@@ -64,6 +64,14 @@ export const env = {
   sqlite: {
     dbPath: process.env.SQLITE_DB_PATH || "data/examprep.db",
   },
+
+  /**
+   * AI/OpenAI configuration
+   */
+  ai: {
+    enabled: !!process.env.OPENAI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY || "",
+  },
 } as const;
 
 /**

@@ -15,7 +15,7 @@ import { QuestionType } from "../lib/services/types";
 
 function AddQuestionPageContent() {
   const router = useRouter();
-  const { addQuestion, user } = useApp();
+  const { addQuestion, currentUserName } = useApp();
   
   const [questionType, setQuestionType] = useState<QuestionType>("mcq");
   const [questionText, setQuestionText] = useState("");
@@ -34,7 +34,11 @@ function AddQuestionPageContent() {
 
   const handleRemoveOption = (index: number) => {
     if (options.length > 2) {
-      setOptions(options.filter((_, i) => i !== index));
+      // Remove the option and recalculate IDs to avoid duplicates
+      const newOptions = options
+        .filter((_, i) => i !== index)
+        .map((opt, i) => ({ ...opt, id: String.fromCharCode(97 + i) }));
+      setOptions(newOptions);
     }
   };
 
@@ -54,29 +58,33 @@ function AddQuestionPageContent() {
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit()) return;
+    if (!canSubmit() || isSubmitting) return;
 
     setIsSubmitting(true);
+    try {
+      if (questionType === "mcq") {
+        const validOptions = options
+          .filter((opt) => opt.text.trim());
 
-    if (questionType === "mcq") {
-      const validOptions = options
-        .filter((opt) => opt.text.trim());
+        await addQuestion({
+          type: "mcq",
+          question: questionText,
+          createdBy: currentUserName,
+          options: validOptions,
+        });
+      } else {
+        await addQuestion({
+          type: "saq",
+          question: questionText,
+          createdBy: currentUserName,
+        });
+      }
 
-      await addQuestion({
-        type: "mcq",
-        question: questionText,
-        createdBy: user?.name || "Anonymous",
-        options: validOptions,
-      });
-    } else {
-      await addQuestion({
-        type: "saq",
-        question: questionText,
-        createdBy: user?.name || "Anonymous",
-      });
+      router.push("/questions");
+    } catch (err) {
+      console.error("Error submitting question:", err);
+      setIsSubmitting(false);
     }
-
-    router.push("/questions");
   };
 
   return (

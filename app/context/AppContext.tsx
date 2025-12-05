@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { Question, User, AnswerHistory } from "../lib/services/types";
-
-const DEFAULT_USER_ID = "default-user";
+import { useAuth } from "./AuthContext";
 
 // User votes by question ID
 type UserVotes = Record<number, { optionId?: string; answerId?: string }>;
@@ -14,6 +13,7 @@ interface AppContextType {
   userVotes: UserVotes;
   loading: boolean;
   error: string | null;
+  currentUserName: string;
   
   // Question operations
   refreshQuestions: () => Promise<void>;
@@ -32,11 +32,30 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { user: authUser } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [userVotes, setUserVotes] = useState<UserVotes>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track pending operations to prevent duplicates
+  const [pendingVotes, setPendingVotes] = useState<Set<number>>(new Set());
+  const [pendingAnswers, setPendingAnswers] = useState<Set<number>>(new Set());
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+
+  // Get the current user ID from auth, or use a local ID for unauthenticated users
+  const getCurrentUserId = useCallback(() => {
+    return authUser?.id || "local-user";
+  }, [authUser]);
+
+  // Get the display name for the current user
+  const getCurrentUserName = useCallback(() => {
+    if (authUser?.email) {
+      return authUser.email.split("@")[0];
+    }
+    return "Anonymous";
+  }, [authUser]);
 
   // Fetch questions from API
   const refreshQuestions = useCallback(async () => {
@@ -62,8 +81,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Fetch user from API
   const refreshUser = useCallback(async () => {
+    const userId = getCurrentUserId();
     try {
-      const response = await fetch(`/api/users/${DEFAULT_USER_ID}`);
+      const response = await fetch(`/api/users/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch user");
       const data = await response.json();
       // Convert date strings to Date objects
@@ -83,21 +103,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Error fetching user:", err);
       setError("Failed to load user");
     }
-  }, []);
+  }, [getCurrentUserId]);
 
   // Fetch user votes
   const refreshUserVotes = useCallback(async () => {
+    const userId = getCurrentUserId();
     try {
-      const response = await fetch(`/api/users/${DEFAULT_USER_ID}/votes`);
+      const response = await fetch(`/api/users/${userId}/votes`);
       if (!response.ok) throw new Error("Failed to fetch votes");
       const data = await response.json();
       setUserVotes(data);
     } catch (err) {
       console.error("Error fetching votes:", err);
     }
-  }, []);
+  }, [getCurrentUserId]);
 
-  // Initial load
+  // Initial load and reload when auth user changes
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -105,7 +126,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     };
     loadData();
-  }, [refreshQuestions, refreshUser, refreshUserVotes]);
+  }, [refreshQuestions, refreshUser, refreshUserVotes, authUser?.id]);
 
   // Add question
   const addQuestion = async (questionData: { 
@@ -114,6 +135,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     createdBy: string; 
     options?: { id: string; text: string }[] 
   }): Promise<Question | null> => {
+    // Prevent duplicate submissions
+    if (isAddingQuestion) return null;
+    
+    setIsAddingQuestion(true);
     try {
       const response = await fetch("/api/questions", {
         method: "POST",
@@ -128,11 +153,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Error creating question:", err);
       setError("Failed to create question");
       return null;
+    } finally {
+      setIsAddingQuestion(false);
     }
   };
 
   // Vote on MCQ (supports changing vote)
   const voteOnMCQ = async (questionId: number, optionId: string) => {
+    // Prevent duplicate votes
+    if (pendingVotes.has(questionId)) return;
+    
+    const userId = getCurrentUserId();
+    setPendingVotes(prev => new Set(prev).add(questionId));
     try {
       // Optimistically update local state
       setUserVotes(prev => ({
@@ -143,7 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`/api/questions/${questionId}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "mcq", optionId, userId: DEFAULT_USER_ID }),
+        body: JSON.stringify({ type: "mcq", optionId, userId }),
       });
       
       if (!response.ok) {
@@ -155,11 +187,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Error voting:", err);
       // Revert on error
       await refreshUserVotes();
+    } finally {
+      setPendingVotes(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(questionId);
+        return newSet;
+      });
     }
   };
 
   // Vote on SAQ (supports changing vote)
   const voteOnSAQ = async (questionId: number, answerId: string) => {
+    // Prevent duplicate votes
+    if (pendingVotes.has(questionId)) return;
+    
+    const userId = getCurrentUserId();
+    setPendingVotes(prev => new Set(prev).add(questionId));
     try {
       // Optimistically update local state
       setUserVotes(prev => ({
@@ -170,7 +213,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`/api/questions/${questionId}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "saq", answerId, userId: DEFAULT_USER_ID }),
+        body: JSON.stringify({ type: "saq", answerId, userId }),
       });
       
       if (!response.ok) {
@@ -182,22 +225,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Error voting:", err);
       // Revert on error
       await refreshUserVotes();
+    } finally {
+      setPendingVotes(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(questionId);
+        return newSet;
+      });
     }
   };
 
   // Add SAQ answer
   const addSAQAnswer = async (questionId: number, answerText: string) => {
+    // Prevent duplicate submissions
+    if (pendingAnswers.has(questionId)) return;
+    
+    const userName = getCurrentUserName();
+    setPendingAnswers(prev => new Set(prev).add(questionId));
     try {
       const response = await fetch(`/api/questions/${questionId}/answers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: answerText, createdBy: user?.name || "Anonymous" }),
+        body: JSON.stringify({ text: answerText, createdBy: userName }),
       });
       if (!response.ok) throw new Error("Failed to add answer");
       await refreshQuestions();
     } catch (err) {
       console.error("Error adding answer:", err);
       setError("Failed to add answer");
+    } finally {
+      setPendingAnswers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(questionId);
+        return newSet;
+      });
     }
   };
 
@@ -213,8 +273,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Add to history
   const addToHistory = async (entry: Omit<AnswerHistory, "id">) => {
+    const userId = getCurrentUserId();
     try {
-      const response = await fetch(`/api/users/${DEFAULT_USER_ID}/history`, {
+      const response = await fetch(`/api/users/${userId}/history`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
@@ -232,6 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     userVotes,
     loading,
     error,
+    currentUserName: getCurrentUserName(),
     refreshQuestions,
     addQuestion,
     voteOnMCQ,

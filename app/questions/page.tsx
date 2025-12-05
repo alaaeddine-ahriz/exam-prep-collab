@@ -17,7 +17,7 @@ import { getConsensusPercent, getTopAnswer, getTotalVotes } from "../lib/utils";
 
 function QuestionBankPageContent() {
   const router = useRouter();
-  const { questions, user } = useApp();
+  const { questions, currentUserName } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "mcq" | "saq">("all");
 
@@ -50,7 +50,7 @@ function QuestionBankPageContent() {
               onClick={() => router.push("/profile")}
               className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-hover transition-colors"
             >
-              {user?.name?.charAt(0)?.toUpperCase() || "?"}
+              {currentUserName.charAt(0).toUpperCase()}
             </button>
           </div>
         </div>
@@ -119,6 +119,12 @@ function QuestionBankPageContent() {
                       <div className="text-xs text-text-secondary-light dark:text-text-secondary-dark whitespace-nowrap">
                         {totalVotes} votes
                       </div>
+                    </div>
+
+                    {/* Added by */}
+                    <div className="flex items-center gap-1.5 pt-1 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                      <Icon name="person" size="sm" className="opacity-60" />
+                      <span>Added by <span className="font-medium">{q.createdBy}</span></span>
                     </div>
                   </div>
                 </Card>

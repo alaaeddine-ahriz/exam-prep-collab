@@ -25,12 +25,12 @@ export function SearchBar({
     <div className={`px-4 py-3 ${className}`}>
       <label className="flex flex-col min-w-40 h-12 w-full">
         <div className="flex w-full flex-1 items-stretch rounded-xl h-full shadow-sm">
-          <div className="flex items-center justify-center pl-4 rounded-l-xl bg-surface-light dark:bg-background-dark text-text-secondary-light dark:text-primary/70">
+          <div className="flex items-center justify-center pl-4 rounded-l-xl bg-surface-light dark:bg-surface-dark text-text-secondary-light dark:text-primary/70">
             <Icon name="search" size="lg" />
           </div>
           <input
             type="text"
-            className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-xl bg-surface-light dark:bg-background-dark h-full px-4 pl-2 text-base font-normal leading-normal text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light dark:placeholder:text-slate-500 border-none focus:outline-none focus:ring-0"
+            className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-xl bg-surface-light dark:bg-surface-dark h-full px-4 pl-2 text-base font-normal leading-normal text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light dark:placeholder:text-slate-500 border-none focus:outline-none focus:ring-0"
             placeholder={placeholder}
             value={value}
             onChange={onChange}

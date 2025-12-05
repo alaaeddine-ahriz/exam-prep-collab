@@ -11,12 +11,20 @@ export async function GET(
     
     let user = await service.users.getUserById(id);
 
-    // If default user doesn't exist, create it
-    if (!user && id === "default-user") {
+    // If user doesn't exist, create them with default values
+    // The name will be updated when they take actions
+    if (!user) {
+      // Extract a display name from the ID (could be an email or UUID)
+      const displayName = id.includes("@") 
+        ? id.split("@")[0] 
+        : id === "local-user" 
+          ? "Guest" 
+          : "User";
+      
       user = await service.users.createUser({
-        id: "default-user",
-        name: "Alex Student",
-        email: "alex@kaist.ac.kr",
+        id,
+        name: displayName,
+        email: id.includes("@") ? id : `${id}@local`,
       });
     }
 

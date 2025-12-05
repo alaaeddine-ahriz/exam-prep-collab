@@ -168,18 +168,18 @@ export class SQLiteUserService implements IUserService {
     await this.updateLastActive(dto.userId);
   }
 
-  // Ensure default user exists
+  // Ensure default user exists (for backwards compatibility)
   async ensureDefaultUser(): Promise<User> {
     const db = getDatabase();
-    const defaultUserId = "default-user";
+    const defaultUserId = "local-user";
 
     const existingUser = await this.getUserById(defaultUserId);
     if (existingUser) return existingUser;
 
     return this.createUser({
       id: defaultUserId,
-      name: "Alex Student",
-      email: "alex@kaist.ac.kr",
+      name: "Guest",
+      email: "guest@local",
     });
   }
 }

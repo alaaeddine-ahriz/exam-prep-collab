@@ -17,6 +17,7 @@ import {
 } from "../../components";
 import { useApp } from "../../context/AppContext";
 import { getTotalVotes } from "../../lib/utils";
+import { fixGrammarAndSpelling } from "../../lib/services/ai/client";
 
 function QuestionDetailsPageContent() {
   const router = useRouter();
@@ -43,6 +44,9 @@ function QuestionDetailsPageContent() {
   const [newAnswerText, setNewAnswerText] = useState("");
   const [showAddAnswer, setShowAddAnswer] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
+  const [isAddingAnswer, setIsAddingAnswer] = useState(false);
+  const [isFixingGrammar, setIsFixingGrammar] = useState(false);
+  const [grammarSuggestion, setGrammarSuggestion] = useState<{original: string; fixed: string} | null>(null);
 
   // Sync selected answers with user's existing vote
   useEffect(() => {
@@ -90,6 +94,7 @@ function QuestionDetailsPageContent() {
     (question.type === "saq" && selectedSAQAnswer && selectedSAQAnswer !== userVote?.answerId);
 
   const handleVote = async () => {
+    if (isVoting) return; // Prevent double clicks
     setIsVoting(true);
     try {
       if (question.type === "mcq" && selectedMCQAnswer) {
@@ -102,11 +107,51 @@ function QuestionDetailsPageContent() {
     }
   };
 
+  const handleFixGrammar = async () => {
+    if (!newAnswerText.trim() || isFixingGrammar) return;
+    
+    setIsFixingGrammar(true);
+    try {
+      const result = await fixGrammarAndSpelling(newAnswerText.trim());
+      if (result.wasModified) {
+        setGrammarSuggestion({
+          original: result.originalText,
+          fixed: result.fixedText,
+        });
+      }
+    } catch (error) {
+      console.error("Error fixing grammar:", error);
+    } finally {
+      setIsFixingGrammar(false);
+    }
+  };
+
+  const handleAcceptGrammarFix = () => {
+    if (grammarSuggestion) {
+      setNewAnswerText(grammarSuggestion.fixed);
+      setGrammarSuggestion(null);
+    }
+  };
+
+  const handleRejectGrammarFix = () => {
+    setGrammarSuggestion(null);
+  };
+
   const handleAddAnswer = async () => {
-    if (newAnswerText.trim() && question.type === "saq") {
-      await addSAQAnswer(questionId, newAnswerText.trim());
-      setNewAnswerText("");
-      setShowAddAnswer(false);
+    if (newAnswerText.trim() && question.type === "saq" && !isAddingAnswer) {
+      setIsAddingAnswer(true);
+      try {
+        // Auto-fix grammar before submitting
+        const grammarResult = await fixGrammarAndSpelling(newAnswerText.trim());
+        const finalText = grammarResult.wasModified ? grammarResult.fixedText : newAnswerText.trim();
+        
+        await addSAQAnswer(questionId, finalText);
+        setNewAnswerText("");
+        setShowAddAnswer(false);
+        setGrammarSuggestion(null);
+      } finally {
+        setIsAddingAnswer(false);
+      }
     }
   };
 
@@ -128,9 +173,13 @@ function QuestionDetailsPageContent() {
       <main className="flex-1 px-4 pt-2 pb-28">
         {/* Question Card */}
         <Card className="mb-6" padding="lg">
-          <h2 className="text-text-primary-light dark:text-text-primary-dark tracking-tight text-xl font-bold leading-tight text-left">
+          <h2 className="text-text-primary-light dark:text-text-primary-dark tracking-tight text-xl font-bold leading-tight text-left mb-3">
             {question.question}
           </h2>
+          <div className="flex items-center gap-1.5 text-sm text-text-secondary-light dark:text-text-secondary-dark">
+            <Icon name="person" size="sm" className="opacity-60" />
+            <span>Added by <span className="font-medium">{question.createdBy}</span></span>
+          </div>
         </Card>
 
         {/* Vote Status Banner */}
@@ -193,9 +242,11 @@ function QuestionDetailsPageContent() {
                 <p className="text-text-secondary-light dark:text-text-secondary-dark mb-4">
                   No answers yet. Be the first to contribute!
                 </p>
-                <Button variant="primary" onClick={() => setShowAddAnswer(true)}>
-                  Add Your Answer
-                </Button>
+                <div className="flex justify-center">
+                  <Button variant="primary" onClick={() => setShowAddAnswer(true)}>
+                    Add Your Answer
+                  </Button>
+                </div>
               </Card>
             ) : (
               question.answers
@@ -286,7 +337,10 @@ function QuestionDetailsPageContent() {
       {/* Add Answer Bottom Sheet */}
       <BottomSheet
         isOpen={showAddAnswer}
-        onClose={() => setShowAddAnswer(false)}
+        onClose={() => {
+          setShowAddAnswer(false);
+          setGrammarSuggestion(null);
+        }}
         title="Add Your Answer"
       >
         <div className="px-4 py-3">
@@ -294,9 +348,51 @@ function QuestionDetailsPageContent() {
             label="Your Answer"
             placeholder="Share your answer to this question..."
             value={newAnswerText}
-            onChange={(e) => setNewAnswerText(e.target.value)}
+            onChange={(e) => {
+              setNewAnswerText(e.target.value);
+              setGrammarSuggestion(null);
+            }}
             maxLength={1000}
           />
+          
+          {/* Grammar Fix Button */}
+          {newAnswerText.trim().length > 10 && !grammarSuggestion && (
+            <button
+              onClick={handleFixGrammar}
+              disabled={isFixingGrammar}
+              className="mt-2 flex items-center gap-1.5 text-sm text-primary hover:text-primary-hover transition-colors disabled:opacity-50"
+            >
+              <Icon name="auto_fix_high" size="sm" />
+              {isFixingGrammar ? "Checking..." : "Fix Grammar & Spelling"}
+            </button>
+          )}
+          
+          {/* Grammar Suggestion */}
+          {grammarSuggestion && (
+            <div className="mt-3 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
+              <div className="flex items-start gap-2 mb-2">
+                <Icon name="auto_fix_high" size="sm" className="text-primary mt-0.5" />
+                <p className="text-sm font-medium text-primary">Suggested Improvement</p>
+              </div>
+              <p className="text-sm text-text-primary-light dark:text-text-primary-dark mb-3 whitespace-pre-wrap">
+                {grammarSuggestion.fixed}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAcceptGrammarFix}
+                  className="flex-1 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={handleRejectGrammarFix}
+                  className="flex-1 px-3 py-1.5 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark bg-surface-light dark:bg-surface-dark rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                >
+                  Keep Original
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col items-stretch px-4 pb-8 pt-2">
@@ -304,9 +400,9 @@ function QuestionDetailsPageContent() {
             variant="primary"
             fullWidth
             onClick={handleAddAnswer}
-            disabled={!newAnswerText.trim()}
+            disabled={!newAnswerText.trim() || isAddingAnswer}
           >
-            Submit Answer
+            {isAddingAnswer ? "Submitting..." : "Submit Answer"}
           </Button>
         </div>
       </BottomSheet>

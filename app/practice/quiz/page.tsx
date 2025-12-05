@@ -15,6 +15,7 @@ import {
 import { useApp } from "../../context/AppContext";
 import { Question } from "../../lib/services/types";
 import { getTopAnswer } from "../../lib/utils";
+import { verifyAnswer as verifyAnswerAI, AnswerVerificationResponse } from "../../lib/services/ai/client";
 
 function PracticeQuizPageContent() {
   const router = useRouter();
@@ -39,6 +40,8 @@ function PracticeQuizPageContent() {
   const [saqAnswer, setSaqAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [aiVerification, setAiVerification] = useState<AnswerVerificationResponse | null>(null);
 
   const currentQuestion = practiceQuestions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / practiceQuestions.length) * 100;
@@ -61,49 +64,81 @@ function PracticeQuizPageContent() {
     return getTopAnswer(question);
   };
 
-  const checkAnswer = (): boolean => {
+  const getTopAnswers = (question: Question): string[] => {
+    if (question.type === "saq" && question.answers && question.answers.length > 0) {
+      // Get top 3 answers sorted by votes
+      return question.answers
+        .sort((a, b) => b.votes - a.votes)
+        .slice(0, 3)
+        .map(a => a.text);
+    }
+    return [getTopAnswer(question)];
+  };
+
+  const checkMCQAnswer = (): boolean => {
     if (currentQuestion.type === "mcq" && currentQuestion.options) {
-      // For MCQ, check if selected answer matches the top-voted option
       const topOption = currentQuestion.options.reduce((max, opt) =>
         opt.votes > max.votes ? opt : max
       );
       return selectedMCQAnswer === topOption.id;
-    } else if (currentQuestion.type === "saq") {
-      // For SAQ, we'll consider it correct if it has significant overlap with top answer
-      // In a real app, this would be more sophisticated
-      const topAnswer = getTopAnswer(currentQuestion).toLowerCase();
-      const userAnswer = saqAnswer.toLowerCase();
-      // Simple check - at least 50% of words match
-      const topWords = topAnswer.split(/\s+/);
-      const userWords = userAnswer.split(/\s+/);
-      const matchingWords = userWords.filter(word => 
-        topWords.some(tw => tw.includes(word) || word.includes(tw))
-      );
-      return matchingWords.length >= topWords.length * 0.3;
     }
     return false;
   };
 
-  const handleCheckAnswer = () => {
-    const isCorrect = checkAnswer();
-    setShowResult(true);
-    setScore(prev => ({
-      correct: prev.correct + (isCorrect ? 1 : 0),
-      total: prev.total + 1,
-    }));
+  const handleCheckAnswer = async () => {
+    if (currentQuestion.type === "mcq") {
+      // MCQ - simple check
+      const isCorrect = checkMCQAnswer();
+      setShowResult(true);
+      setScore(prev => ({
+        correct: prev.correct + (isCorrect ? 1 : 0),
+        total: prev.total + 1,
+      }));
 
-    // Record in history
-    addToHistory({
-      questionId: currentQuestion.id,
-      questionText: currentQuestion.question,
-      questionType: currentQuestion.type,
-      userAnswer: currentQuestion.type === "mcq" && currentQuestion.options
-        ? currentQuestion.options.find(o => o.id === selectedMCQAnswer)?.text || ""
-        : saqAnswer,
-      consensusAnswer: getCorrectAnswer(currentQuestion),
-      isCorrect,
-      answeredAt: new Date(),
-    });
+      addToHistory({
+        questionId: currentQuestion.id,
+        questionText: currentQuestion.question,
+        questionType: currentQuestion.type,
+        userAnswer: currentQuestion.options?.find(o => o.id === selectedMCQAnswer)?.text || "",
+        consensusAnswer: getCorrectAnswer(currentQuestion),
+        isCorrect,
+        answeredAt: new Date(),
+      });
+    } else {
+      // SAQ - use AI verification
+      setIsVerifying(true);
+      try {
+        const topAnswers = getTopAnswers(currentQuestion);
+        const verification = await verifyAnswerAI(
+          saqAnswer,
+          topAnswers,
+          currentQuestion.question
+        );
+        
+        setAiVerification(verification);
+        setShowResult(true);
+        setScore(prev => ({
+          correct: prev.correct + (verification.isCorrect ? 1 : 0),
+          total: prev.total + 1,
+        }));
+
+        addToHistory({
+          questionId: currentQuestion.id,
+          questionText: currentQuestion.question,
+          questionType: currentQuestion.type,
+          userAnswer: saqAnswer,
+          consensusAnswer: getCorrectAnswer(currentQuestion),
+          isCorrect: verification.isCorrect,
+          answeredAt: new Date(),
+        });
+      } catch (error) {
+        console.error("Error verifying answer:", error);
+        // Fallback to showing result without AI
+        setShowResult(true);
+      } finally {
+        setIsVerifying(false);
+      }
+    }
   };
 
   const handleNext = () => {
@@ -112,13 +147,16 @@ function PracticeQuizPageContent() {
       setSelectedMCQAnswer(null);
       setSaqAnswer("");
       setShowResult(false);
+      setAiVerification(null);
     } else {
       // Quiz complete - show results
-      router.push(`/practice/results?correct=${score.correct + (checkAnswer() ? 0 : 0)}&total=${practiceQuestions.length}`);
+      router.push(`/practice/results?correct=${score.correct}&total=${practiceQuestions.length}`);
     }
   };
 
-  const isCorrect = showResult ? checkAnswer() : false;
+  const isCorrect = showResult 
+    ? (currentQuestion.type === "mcq" ? checkMCQAnswer() : (aiVerification?.isCorrect ?? false))
+    : false;
   const canCheck = currentQuestion.type === "mcq" 
     ? selectedMCQAnswer !== null 
     : saqAnswer.trim().length > 0;
@@ -231,22 +269,42 @@ function PracticeQuizPageContent() {
           {/* Result Feedback */}
           {showResult && (
             <div
-              className={`flex items-center gap-3 p-4 rounded-xl ${
+              className={`flex flex-col gap-2 p-4 rounded-xl ${
                 isCorrect
-                  ? "bg-success/10 text-success"
-                  : "bg-warning/10 text-warning"
+                  ? "bg-success/10"
+                  : "bg-warning/10"
               }`}
             >
-              <Icon
-                name={isCorrect ? "check_circle" : "info"}
-                filled
-                size="lg"
-              />
-              <span className="font-semibold">
-                {isCorrect 
-                  ? "Great! Your answer matches the consensus." 
-                  : "Your answer differs from the consensus. Review the top answer above."}
-              </span>
+              <div className={`flex items-center gap-3 ${isCorrect ? "text-success" : "text-warning"}`}>
+                <Icon
+                  name={isCorrect ? "check_circle" : "info"}
+                  filled
+                  size="lg"
+                />
+                <span className="font-semibold">
+                  {isCorrect 
+                    ? "Great! Your answer matches the consensus." 
+                    : "Your answer differs from the consensus."}
+                </span>
+              </div>
+              
+              {/* AI Explanation for SAQ */}
+              {currentQuestion.type === "saq" && aiVerification && (
+                <div className="mt-2 pt-2 border-t border-black/10 dark:border-white/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon name="psychology" size="sm" className="text-primary" />
+                    <span className="text-sm font-medium text-primary">AI Analysis</span>
+                    {aiVerification.confidence !== undefined && (
+                      <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                        ({Math.round(aiVerification.confidence * 100)}% confidence)
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-text-primary-light dark:text-text-primary-dark">
+                    {aiVerification.explanation}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </main>
@@ -259,9 +317,16 @@ function PracticeQuizPageContent() {
             variant="primary"
             fullWidth
             onClick={handleCheckAnswer}
-            disabled={!canCheck}
+            disabled={!canCheck || isVerifying}
           >
-            Check Answer
+            {isVerifying ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                Analyzing Answer...
+              </span>
+            ) : (
+              "Check Answer"
+            )}
           </Button>
         ) : (
           <Button variant="primary" fullWidth onClick={handleNext}>

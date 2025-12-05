@@ -181,15 +181,15 @@ export class SupabaseUserService implements IUserService {
   }
 
   async ensureDefaultUser(): Promise<User> {
-    const defaultUserId = "default-user";
+    const defaultUserId = "local-user";
 
     const existingUser = await this.getUserById(defaultUserId);
     if (existingUser) return existingUser;
 
     return this.createUser({
       id: defaultUserId,
-      name: "Alex Student",
-      email: "alex@kaist.ac.kr",
+      name: "Guest",
+      email: "guest@local",
     });
   }
 }

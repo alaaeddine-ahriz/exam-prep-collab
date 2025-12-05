@@ -6,10 +6,10 @@
  */
 
 export const DEFAULT_USER = {
-  id: "default-user",
-  name: "Alex Student",
-  email: "alex@kaist.ac.kr",
-  streak: 5,
+  id: "local-user",
+  name: "Guest",
+  email: "guest@local",
+  streak: 0,
 };
 
 export const SAMPLE_QUESTIONS = [

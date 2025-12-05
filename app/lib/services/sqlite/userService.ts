@@ -15,6 +15,36 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
+/**
+ * Calculate new streak based on last active date
+ * - Same day: streak stays the same
+ * - Yesterday: streak increments by 1
+ * - More than 1 day ago: streak resets to 1
+ */
+function calculateNewStreak(lastActive: Date, currentStreak: number): number {
+  const now = new Date();
+  const lastActiveDate = new Date(lastActive);
+  
+  // Normalize to start of day (in local timezone)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const lastDay = new Date(lastActiveDate.getFullYear(), lastActiveDate.getMonth(), lastActiveDate.getDate());
+  
+  // Calculate difference in days
+  const diffTime = today.getTime() - lastDay.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    // Same day - streak stays the same (or starts at 1 if it was 0)
+    return currentStreak || 1;
+  } else if (diffDays === 1) {
+    // Yesterday - increment streak
+    return currentStreak + 1;
+  } else {
+    // Missed a day or more - reset to 1
+    return 1;
+  }
+}
+
 export class SQLiteUserService implements IUserService {
   async getUserById(id: string): Promise<User | null> {
     const db = getDatabase();
@@ -163,6 +193,16 @@ export class SQLiteUserService implements IUserService {
       dto.consensusAnswer,
       dto.isCorrect ? 1 : 0
     );
+
+    // Calculate and update streak before updating last_active
+    const user = db
+      .prepare("SELECT streak, last_active FROM users WHERE id = ?")
+      .get(dto.userId) as Pick<DBUser, "streak" | "last_active"> | undefined;
+
+    if (user) {
+      const newStreak = calculateNewStreak(new Date(user.last_active), user.streak);
+      await this.updateStreak(dto.userId, newStreak);
+    }
 
     // Update last active
     await this.updateLastActive(dto.userId);

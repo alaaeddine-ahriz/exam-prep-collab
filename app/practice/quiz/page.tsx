@@ -85,10 +85,18 @@ function PracticeQuizPageContent() {
     return false;
   };
 
-  const handleCheckAnswer = async () => {
-    if (currentQuestion.type === "mcq") {
-      // MCQ - simple check
-      const isCorrect = checkMCQAnswer();
+  const handleMCQSelect = (optionId: string) => {
+    if (showResult) return; // Don't allow selection after showing result
+    
+    setSelectedMCQAnswer(optionId);
+    
+    // Immediately check the answer
+    if (currentQuestion.type === "mcq" && currentQuestion.options) {
+      const topOption = currentQuestion.options.reduce((max, opt) =>
+        opt.votes > max.votes ? opt : max
+      );
+      const isCorrect = optionId === topOption.id;
+      
       setShowResult(true);
       setScore(prev => ({
         correct: prev.correct + (isCorrect ? 1 : 0),
@@ -99,11 +107,18 @@ function PracticeQuizPageContent() {
         questionId: currentQuestion.id,
         questionText: currentQuestion.question,
         questionType: currentQuestion.type,
-        userAnswer: currentQuestion.options?.find(o => o.id === selectedMCQAnswer)?.text || "",
+        userAnswer: currentQuestion.options?.find(o => o.id === optionId)?.text || "",
         consensusAnswer: getCorrectAnswer(currentQuestion),
         isCorrect,
         answeredAt: new Date(),
       });
+    }
+  };
+
+  const handleCheckAnswer = async () => {
+    if (currentQuestion.type === "mcq") {
+      // MCQ is now handled by handleMCQSelect
+      return;
     } else {
       // SAQ - use AI verification
       setIsVerifying(true);
@@ -217,17 +232,17 @@ function PracticeQuizPageContent() {
                   }
                 }
 
-                return (
-                  <PracticeAnswerOption
-                    key={option.id}
-                    id={option.id}
-                    name="answer-options"
-                    label={`${option.id.toUpperCase()}. ${option.text}`}
-                    checked={selectedMCQAnswer === option.id}
-                    onChange={() => !showResult && setSelectedMCQAnswer(option.id)}
-                    className={optionClassName}
-                  />
-                );
+                  return (
+                    <PracticeAnswerOption
+                      key={option.id}
+                      id={option.id}
+                      name="answer-options"
+                      label={`${option.id.toUpperCase()}. ${option.text}`}
+                      checked={selectedMCQAnswer === option.id}
+                      onChange={() => handleMCQSelect(option.id)}
+                      className={optionClassName}
+                    />
+                  );
               })}
             </div>
           )}
@@ -312,7 +327,15 @@ function PracticeQuizPageContent() {
 
       {/* Footer Action Button */}
       <div className="sticky bottom-0 bg-background-light dark:bg-background-dark p-4 border-t border-slate-200 dark:border-slate-800">
-        {!showResult ? (
+        {/* For MCQ: show Next button after selection (result shown automatically) */}
+        {/* For SAQ: show Check Answer button, then Next button after result */}
+        {currentQuestion.type === "mcq" ? (
+          showResult && (
+            <Button variant="primary" fullWidth onClick={handleNext}>
+              {currentQuestionIndex < practiceQuestions.length - 1 ? "Next Question" : "See Results"}
+            </Button>
+          )
+        ) : !showResult ? (
           <Button
             variant="primary"
             fullWidth

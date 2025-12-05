@@ -17,7 +17,7 @@ import { getConsensusPercent, getTopAnswer, getTotalVotes } from "../lib/utils";
 
 function QuestionBankPageContent() {
   const router = useRouter();
-  const { questions, currentUserName } = useApp();
+  const { questions, currentUserName, user } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "mcq" | "saq">("all");
 
@@ -42,9 +42,13 @@ function QuestionBankPageContent() {
             Question Bank
           </h1>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-              {questions.length}
-            </span>
+            {/* Streak Display */}
+            <div className="flex items-center gap-1">
+              <Icon name="local_fire_department" className="text-orange-500" />
+              <span className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
+                {user?.stats?.streak ?? 0}
+              </span>
+            </div>
             {/* Profile Button */}
             <button
               onClick={() => router.push("/profile")}

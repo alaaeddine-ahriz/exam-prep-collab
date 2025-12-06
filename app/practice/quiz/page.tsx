@@ -101,7 +101,7 @@ function PracticeQuizPageContent() {
   // Loading state
   if (isLoadingQuestions) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
+      <div className="flex h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
         <p className="text-text-secondary-light dark:text-text-secondary-dark text-center">
           {isCramModeActive ? "Preparing cram session..." : "Selecting questions for review..."}
@@ -112,7 +112,7 @@ function PracticeQuizPageContent() {
 
   if (practiceQuestions.length === 0) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
+      <div className="flex h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
         <Icon name="quiz" size="xl" className="text-text-secondary-light dark:text-text-secondary-dark mb-4" />
         <p className="text-text-secondary-light dark:text-text-secondary-dark text-center mb-4">
           No questions available for this practice mode.
@@ -241,9 +241,9 @@ function PracticeQuizPageContent() {
     : saqAnswer.trim().length > 0;
 
   return (
-    <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark">
+    <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark">
       {/* Top App Bar */}
-      <div className="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex-shrink-0 flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between border-b border-slate-200 dark:border-slate-800">
         <div className="flex w-12 items-center justify-start">
           <button
             onClick={() => router.push("/questions")}
@@ -260,8 +260,8 @@ function PracticeQuizPageContent() {
         </div>
       </div>
 
-      <div className="flex flex-col flex-grow">
-        <main className="flex-grow p-4 space-y-6">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <main className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Progress Bar */}
           <div className="flex flex-col gap-2">
             <div className="flex gap-6 justify-between items-center">
@@ -390,7 +390,7 @@ function PracticeQuizPageContent() {
       </div>
 
       {/* Footer Action Button */}
-      <div className="sticky bottom-0 bg-background-light dark:bg-background-dark p-4 border-t border-slate-200 dark:border-slate-800">
+      <div className="flex-shrink-0 bg-background-light dark:bg-background-dark p-4 border-t border-slate-200 dark:border-slate-800">
         {/* For MCQ: show Next button after selection (result shown automatically) */}
         {/* For SAQ: show Check Answer button, then Next button after result */}
         {currentQuestion.type === "mcq" ? (

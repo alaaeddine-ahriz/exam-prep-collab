@@ -46,17 +46,28 @@ export async function fixGrammarAndSpelling(
 }
 
 /**
+ * Extended verification response that includes currency info
+ */
+export interface VerifyAnswerResult {
+  verification: AnswerVerificationResponse;
+  insufficientBalance?: boolean;
+  newBalance?: number;
+}
+
+/**
  * Verify if a user's answer is correct using AI
  * @param userAnswer The user's answer
  * @param correctAnswers Array of correct/top community answers
  * @param questionText The question text
- * @returns Verification result
+ * @param userId Optional user ID for token deduction
+ * @returns Verification result with optional balance info
  */
 export async function verifyAnswer(
   userAnswer: string,
   correctAnswers: string[],
-  questionText: string
-): Promise<AnswerVerificationResponse> {
+  questionText: string,
+  userId?: string
+): Promise<VerifyAnswerResult> {
   try {
     const response = await fetch("/api/ai/verify", {
       method: "POST",
@@ -67,18 +78,33 @@ export async function verifyAnswer(
         userAnswer,
         correctAnswers,
         questionText,
+        userId,
       }),
     });
 
-    if (!response.ok) {
-      // Fallback to simple word matching if AI unavailable
-      return fallbackVerification(userAnswer, correctAnswers);
+    if (response.status === 402) {
+      // Insufficient balance
+      const data = await response.json();
+      return {
+        verification: fallbackVerification(userAnswer, correctAnswers),
+        insufficientBalance: true,
+        newBalance: data.balance,
+      };
     }
 
-    return await response.json();
+    if (!response.ok) {
+      // Fallback to simple word matching if AI unavailable
+      return { verification: fallbackVerification(userAnswer, correctAnswers) };
+    }
+
+    const data = await response.json();
+    return {
+      verification: data,
+      newBalance: data.newBalance,
+    };
   } catch (error) {
     console.error("Failed to verify answer:", error);
-    return fallbackVerification(userAnswer, correctAnswers);
+    return { verification: fallbackVerification(userAnswer, correctAnswers) };
   }
 }
 

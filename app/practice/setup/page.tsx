@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   RadioOption,
@@ -9,52 +9,23 @@ import {
   Icon,
   ProtectedRoute,
   Card,
+  useTokenToast,
 } from "../../components";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 
-interface BalanceInfo {
-  balance: number;
-  canClaimDailyBonus: boolean;
-  practiceSessionsUsedToday: number;
-  freeSessionsRemaining: number;
-  requiresPaymentForPractice: boolean;
-  config: {
-    currencyName: string;
-    practiceSessionCost: number;
-    freePracticeSessionsPerDay: number;
-  };
-}
-
 function PracticeModeSetupPageContent() {
   const router = useRouter();
-  const { questions, masteryStats, isCramModeActive, daysUntilExam } = useApp();
+  const { questions, masteryStats, isCramModeActive, daysUntilExam, currencyInfo, refreshCurrency } = useApp();
   const { user: authUser } = useAuth();
+  const { showTokenToast } = useTokenToast();
   
   const [questionSource, setQuestionSource] = useState<"all" | "mcq" | "saq">("all");
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
-  const [balanceInfo, setBalanceInfo] = useState<BalanceInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const userId = authUser?.id || "local-user";
-
-  // Fetch balance info
-  const fetchBalance = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/users/${userId}/balance`);
-      if (response.ok) {
-        const data = await response.json();
-        setBalanceInfo(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch balance:", err);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    fetchBalance();
-  }, [fetchBalance]);
 
   const filteredCount = questions.filter((q) => 
     questionSource === "all" || q.type === questionSource
@@ -68,7 +39,7 @@ function PracticeModeSetupPageContent() {
 
     try {
       // Check if payment is required
-      if (balanceInfo?.requiresPaymentForPractice) {
+      if (currencyInfo?.requiresPaymentForPractice) {
         // Try to spend tokens
         const spendResponse = await fetch(`/api/users/${userId}/balance`, {
           method: "POST",
@@ -79,18 +50,27 @@ function PracticeModeSetupPageContent() {
         if (!spendResponse.ok) {
           const errorData = await spendResponse.json();
           if (spendResponse.status === 402) {
-            setError(`Insufficient ${balanceInfo.config.currencyName}. You need ${balanceInfo.config.practiceSessionCost} to start a practice session.`);
+            setError(`Insufficient ${currencyInfo.config.currencyName}. You need ${currencyInfo.config.practiceSessionCost} to start a practice session.`);
             setIsLoading(false);
             return;
           }
           throw new Error(errorData.error || "Failed to start practice");
         }
+        
+        // Show toast for spending tokens
+        showTokenToast(-currencyInfo.config.practiceSessionCost, "Practice session");
+        
+        // Update the global currency state
+        await refreshCurrency();
       }
 
       // Record the practice session (decrements free session count)
       await fetch(`/api/users/${userId}/balance/record-session`, {
         method: "POST",
       });
+      
+      // Refresh currency to update free sessions count
+      await refreshCurrency();
 
       const params = new URLSearchParams({
         source: questionSource,
@@ -135,7 +115,7 @@ function PracticeModeSetupPageContent() {
 
       <main className="flex-grow px-4 py-4 pb-28 space-y-6">
         {/* Token Balance Card */}
-        {balanceInfo && (
+        {currencyInfo && (
           <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -144,20 +124,20 @@ function PracticeModeSetupPageContent() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                    {balanceInfo.balance} {balanceInfo.config.currencyName}
+                    {currencyInfo.balance} {currencyInfo.config.currencyName}
                   </p>
                   <p className="text-xs text-amber-600 dark:text-amber-400">
-                    {balanceInfo.freeSessionsRemaining > 0 
-                      ? `${balanceInfo.freeSessionsRemaining} free session${balanceInfo.freeSessionsRemaining !== 1 ? 's' : ''} left today`
-                      : `${balanceInfo.config.practiceSessionCost} ${balanceInfo.config.currencyName} per session`
+                    {currencyInfo.freeSessionsRemaining > 0 
+                      ? `${currencyInfo.freeSessionsRemaining} free session${currencyInfo.freeSessionsRemaining !== 1 ? 's' : ''} left today`
+                      : `${currencyInfo.config.practiceSessionCost} ${currencyInfo.config.currencyName} per session`
                     }
                   </p>
                 </div>
               </div>
-              {balanceInfo.requiresPaymentForPractice && (
+              {currencyInfo.requiresPaymentForPractice && (
                 <div className="px-2 py-1 rounded bg-amber-200 dark:bg-amber-700">
                   <span className="text-xs font-medium text-amber-800 dark:text-amber-200">
-                    -{balanceInfo.config.practiceSessionCost}
+                    -{currencyInfo.config.practiceSessionCost}
                   </span>
                 </div>
               )}
@@ -249,15 +229,15 @@ function PracticeModeSetupPageContent() {
           fullWidth
           size="lg"
           onClick={handleStartPractice}
-          disabled={filteredCount === 0 || isLoading || (balanceInfo?.requiresPaymentForPractice && balanceInfo.balance < balanceInfo.config.practiceSessionCost)}
+          disabled={filteredCount === 0 || isLoading || (currencyInfo?.requiresPaymentForPractice && currencyInfo.balance < currencyInfo.config.practiceSessionCost)}
         >
           {isLoading ? (
             "Starting..."
-          ) : balanceInfo?.requiresPaymentForPractice ? (
-            balanceInfo.balance >= balanceInfo.config.practiceSessionCost ? (
-              `Start Practice (${balanceInfo.config.practiceSessionCost} ${balanceInfo.config.currencyName})`
+          ) : currencyInfo?.requiresPaymentForPractice ? (
+            currencyInfo.balance >= currencyInfo.config.practiceSessionCost ? (
+              `Start Practice (${currencyInfo.config.practiceSessionCost} ${currencyInfo.config.currencyName})`
             ) : (
-              `Not enough ${balanceInfo.config.currencyName}`
+              `Not enough ${currencyInfo.config.currencyName}`
             )
           ) : (
             `Start Practice (${Math.min(numberOfQuestions, maxQuestions)} questions)`

@@ -11,8 +11,10 @@ import {
   TextArea,
   QuestionTypeBadge,
   ProtectedRoute,
+  useTokenToast,
 } from "../../components";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import { Question } from "../../lib/services/types";
 import { getTopAnswer } from "../../lib/utils";
 import { verifyAnswer as verifyAnswerAI, AnswerVerificationResponse } from "../../lib/services/ai/client";
@@ -20,7 +22,10 @@ import { verifyAnswer as verifyAnswerAI, AnswerVerificationResponse } from "../.
 function PracticeQuizPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { questions, addToHistory, getPracticeQuestions, isCramModeActive, refreshMastery } = useApp();
+  const { questions, addToHistory, getPracticeQuestions, isCramModeActive, refreshMastery, refreshCurrency, currencyInfo } = useApp();
+  const { user: authUser } = useAuth();
+  const { showTokenToast } = useTokenToast();
+  const userId = authUser?.id;
 
   const source = searchParams.get("source") || "all";
   const count = Number(searchParams.get("count")) || 10;
@@ -188,12 +193,22 @@ function PracticeQuizPageContent() {
       setIsVerifying(true);
       try {
         const topAnswers = getTopAnswers(currentQuestion);
-        const verification = await verifyAnswerAI(
+        const result = await verifyAnswerAI(
           saqAnswer,
           topAnswers,
-          currentQuestion.question
+          currentQuestion.question,
+          userId // Pass userId for token deduction
         );
         
+        // Handle token deduction
+        if (result.newBalance !== undefined && currencyInfo) {
+          const cost = currencyInfo.config.aiVerificationCost;
+          showTokenToast(-cost, "AI verification");
+          // Refresh currency to update the header/profile
+          await refreshCurrency();
+        }
+        
+        const verification = result.verification;
         setAiVerification(verification);
         setShowResult(true);
         setScore(prev => ({

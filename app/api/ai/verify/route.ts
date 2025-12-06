@@ -43,21 +43,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Deduct tokens for AI verification if userId is provided
+    let newBalance: number | undefined;
     if (userId) {
       const config = getCurrencyConfig();
-      const result = await spendAIVerificationTokens(userId);
+      const spendResult = await spendAIVerificationTokens(userId);
       
-      if (!result.success) {
+      if (!spendResult.success) {
         return NextResponse.json(
           {
             error: "Insufficient balance",
             required: config.costs.aiVerification,
-            balance: result.balance.balance,
+            balance: spendResult.balance.balance,
             currencyName: config.currency.name,
           },
           { status: 402 } // Payment Required
         );
       }
+      newBalance = spendResult.balance.balance;
     }
 
     const result = await aiService.verifyAnswer({
@@ -66,7 +68,10 @@ export async function POST(request: NextRequest) {
       questionText,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      newBalance,
+    });
   } catch (error) {
     console.error("Answer verification API error:", error);
     return NextResponse.json(

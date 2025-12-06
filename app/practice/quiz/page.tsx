@@ -101,7 +101,7 @@ function PracticeQuizPageContent() {
   // Loading state
   if (isLoadingQuestions) {
     return (
-      <div className="flex h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
         <p className="text-text-secondary-light dark:text-text-secondary-dark text-center">
           {isCramModeActive ? "Preparing cram session..." : "Selecting questions for review..."}
@@ -112,7 +112,7 @@ function PracticeQuizPageContent() {
 
   if (practiceQuestions.length === 0) {
     return (
-      <div className="flex h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
         <Icon name="quiz" size="xl" className="text-text-secondary-light dark:text-text-secondary-dark mb-4" />
         <p className="text-text-secondary-light dark:text-text-secondary-dark text-center mb-4">
           No questions available for this practice mode.
@@ -241,27 +241,26 @@ function PracticeQuizPageContent() {
     : saqAnswer.trim().length > 0;
 
   return (
-    <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark">
+    <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark">
       {/* Top App Bar */}
-      <div className="flex-shrink-0 flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between border-b border-slate-200 dark:border-slate-800">
-        <div className="flex w-12 items-center justify-start">
+      <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark">
+        <div className="flex items-center p-4 pb-2 justify-between">
           <button
             onClick={() => router.push("/questions")}
             className="flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 bg-transparent"
           >
             <Icon name="close" />
           </button>
+          <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">
+            {isCramModeActive ? "Cram Mode" : "Smart Review"}
+          </h2>
+          <div className="flex w-12 items-center justify-end">
+            <QuestionTypeBadge type={currentQuestion.type} />
+          </div>
         </div>
-        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">
-          {isCramModeActive ? "Cram Mode" : "Smart Review"}
-        </h2>
-        <div className="flex w-12 items-center justify-end">
-          <QuestionTypeBadge type={currentQuestion.type} />
-        </div>
-      </div>
+      </header>
 
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-4 space-y-6">
+      <main className="flex-grow p-4 pb-24 space-y-6">
           {/* Progress Bar */}
           <div className="flex flex-col gap-2">
             <div className="flex gap-6 justify-between items-center">
@@ -387,10 +386,9 @@ function PracticeQuizPageContent() {
             </div>
           )}
         </main>
-      </div>
 
-      {/* Footer Action Button */}
-      <div className="flex-shrink-0 bg-background-light dark:bg-background-dark p-4 border-t border-slate-200 dark:border-slate-800">
+      {/* Fixed Bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
         {/* For MCQ: show Next button after selection (result shown automatically) */}
         {/* For SAQ: show Check Answer button, then Next button after result */}
         {currentQuestion.type === "mcq" ? (

@@ -17,6 +17,13 @@ NEXT_PUBLIC_DATA_PROVIDER=sqlite
 SQLITE_DB_PATH=data/examprep.db
 
 # ============================================
+# Site URL Configuration
+# ============================================
+# Your production URL (used for magic link redirects)
+# If not set, defaults to http://localhost:3000
+NEXT_PUBLIC_SITE_URL=https://cs473.alaaeddine.org
+
+# ============================================
 # Supabase Configuration (for production)
 # ============================================
 # Get these from your Supabase project settings

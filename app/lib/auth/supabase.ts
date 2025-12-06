@@ -60,10 +60,12 @@ export async function signIn(email: string, password: string) {
  */
 export async function signInWithMagicLink(email: string) {
   const client = getAuthClient();
+  // Use NEXT_PUBLIC_SITE_URL for production, fall back to window.location.origin for dev
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
   const { data, error } = await client.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   });
   return { data, error };

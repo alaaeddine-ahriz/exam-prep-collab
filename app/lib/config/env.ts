@@ -51,6 +51,12 @@ export const env = {
   isProduction: process.env.NODE_ENV === "production",
 
   /**
+   * Site URL for authentication redirects
+   * Falls back to localhost:3000 in development
+   */
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+
+  /**
    * Supabase configuration (only used when dataProvider is 'supabase')
    */
   supabase: {

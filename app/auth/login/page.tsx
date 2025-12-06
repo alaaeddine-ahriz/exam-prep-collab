@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Icon } from "../../components";
@@ -8,7 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signInWithMagicLink, loading: authLoading } = useAuth();
+  const { signIn, signInWithMagicLink, loading: authLoading, isDevMode } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +16,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Pre-fill dev credentials in dev mode
+  useEffect(() => {
+    if (isDevMode && !email) {
+      setEmail("dev@mail.com");
+      setPassword("pwdpwd");
+    }
+  }, [isDevMode, email]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +113,19 @@ export default function LoginPage() {
               Sign in to continue to ExamPrep
             </p>
           </div>
+
+          {/* Dev Mode Indicator */}
+          {isDevMode && (
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                <Icon name="code" size="sm" />
+                <span className="font-medium">Dev Mode</span>
+              </div>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                Use <strong>dev@mail.com</strong> / <strong>pwdpwd</strong> to sign in
+              </p>
+            </div>
+          )}
 
           {/* Login Form */}
           <Card className="mb-4">

@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { masteryService } from "../../../../lib/services/supabase/masteryService";
+import { masteryService as supabaseMasteryService } from "../../../../lib/services/supabase/masteryService";
+import { sqliteMasteryService } from "../../../../lib/services/sqlite/masteryService";
+import { env } from "../../../../lib/config";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
+}
+
+// Get the appropriate mastery service based on provider
+function getMasteryService() {
+  return env.dataProvider === "supabase" ? supabaseMasteryService : sqliteMasteryService;
 }
 
 /**
@@ -21,6 +28,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const questionId = searchParams.get("questionId");
     const wantStats = searchParams.get("stats") === "true";
     const totalQuestions = parseInt(searchParams.get("totalQuestions") || "0", 10);
+
+    const masteryService = getMasteryService();
 
     if (questionId) {
       // Get mastery for specific question
@@ -71,6 +80,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         { status: 400 }
       );
     }
+
+    const masteryService = getMasteryService();
 
     const updatedMastery = await masteryService.updateMastery({
       userId,

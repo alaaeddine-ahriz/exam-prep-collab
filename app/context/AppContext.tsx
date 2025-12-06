@@ -13,6 +13,24 @@ interface StudyModeSettings {
   isEnabled: boolean;
 }
 
+// Currency balance info
+interface CurrencyInfo {
+  balance: number;
+  canClaimDailyBonus: boolean;
+  practiceSessionsUsedToday: number;
+  freeSessionsRemaining: number;
+  requiresPaymentForPractice: boolean;
+  config: {
+    currencyName: string;
+    practiceSessionCost: number;
+    aiVerificationCost: number;
+    dailyLoginReward: number;
+    voteReward: number;
+    answerReward: number;
+    freePracticeSessionsPerDay: number;
+  };
+}
+
 interface AppContextType {
   questions: Question[];
   user: User | null;
@@ -30,6 +48,11 @@ interface AppContextType {
   isCramModeActive: boolean;
   daysUntilExam: number | null;
   setExamDate: (date: Date | null) => void;
+  
+  // Currency state
+  currencyInfo: CurrencyInfo | null;
+  refreshCurrency: () => Promise<void>;
+  claimDailyBonus: () => Promise<{ success: boolean; amount?: number }>;
   
   // Question operations
   refreshQuestions: () => Promise<void>;
@@ -71,6 +94,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [userVotes, setUserVotes] = useState<UserVotes>({});
   const [mastery, setMastery] = useState<QuestionMastery[]>([]);
   const [masteryStats, setMasteryStats] = useState<MasteryStats | null>(null);
+  const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -166,6 +190,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [getCurrentUserId]);
 
+  // Fetch currency balance
+  const refreshCurrency = useCallback(async () => {
+    const userId = getCurrentUserId();
+    try {
+      const response = await fetch(`/api/users/${userId}/balance`);
+      if (!response.ok) throw new Error("Failed to fetch balance");
+      const data = await response.json();
+      setCurrencyInfo(data);
+    } catch (err) {
+      console.error("Error fetching currency:", err);
+    }
+  }, [getCurrentUserId]);
+
+  // Claim daily bonus
+  const claimDailyBonus = useCallback(async (): Promise<{ success: boolean; amount?: number }> => {
+    const userId = getCurrentUserId();
+    try {
+      const response = await fetch(`/api/users/${userId}/balance/claim-daily`, {
+        method: "POST",
+      });
+      
+      if (!response.ok) {
+        if (response.status === 409) {
+          // Already claimed
+          return { success: false };
+        }
+        throw new Error("Failed to claim bonus");
+      }
+      
+      const data = await response.json();
+      await refreshCurrency();
+      return { success: true, amount: data.amount };
+    } catch (err) {
+      console.error("Error claiming daily bonus:", err);
+      return { success: false };
+    }
+  }, [getCurrentUserId, refreshCurrency]);
+
   // Fetch mastery data
   const refreshMastery = useCallback(async (force: boolean = false) => {
     // Skip if already loaded and not forcing
@@ -204,11 +266,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([refreshQuestions(), refreshUser(), refreshUserVotes()]);
+      await Promise.all([refreshQuestions(), refreshUser(), refreshUserVotes(), refreshCurrency()]);
       setLoading(false);
     };
     loadData();
-  }, [refreshQuestions, refreshUser, refreshUserVotes, authUser?.id]);
+  }, [refreshQuestions, refreshUser, refreshUserVotes, refreshCurrency, authUser?.id]);
 
   // Load mastery after questions are loaded
   useEffect(() => {
@@ -300,7 +362,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw new Error("Failed to vote");
       }
       
-      await refreshQuestions();
+      await Promise.all([refreshQuestions(), refreshCurrency()]);
     } catch (err) {
       console.error("Error voting:", err);
       // Revert on error
@@ -338,7 +400,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw new Error("Failed to vote");
       }
       
-      await refreshQuestions();
+      await Promise.all([refreshQuestions(), refreshCurrency()]);
     } catch (err) {
       console.error("Error voting:", err);
       // Revert on error
@@ -358,15 +420,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (pendingAnswers.has(questionId)) return;
     
     const userName = getCurrentUserName();
+    const userId = getCurrentUserId();
     setPendingAnswers(prev => new Set(prev).add(questionId));
     try {
       const response = await fetch(`/api/questions/${questionId}/answers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: answerText, createdBy: userName }),
+        body: JSON.stringify({ text: answerText, createdBy: userName, userId }),
       });
       if (!response.ok) throw new Error("Failed to add answer");
-      await refreshQuestions();
+      await Promise.all([refreshQuestions(), refreshCurrency()]);
     } catch (err) {
       console.error("Error adding answer:", err);
       setError("Failed to add answer");
@@ -485,6 +548,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isCramModeActive,
     daysUntilExam,
     setExamDate,
+    // Currency
+    currencyInfo,
+    refreshCurrency,
+    claimDailyBonus,
     // Operations
     refreshQuestions,
     addQuestion,

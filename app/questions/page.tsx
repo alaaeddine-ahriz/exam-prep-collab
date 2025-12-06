@@ -12,6 +12,8 @@ import {
   Button,
   ProtectedRoute,
   MasteryIndicator,
+  TokenBalance,
+  DailyBonusModal,
 } from "../components";
 import { useApp } from "../context/AppContext";
 import { getConsensusPercent, getTopAnswer, getTotalVotes } from "../lib/utils";
@@ -44,6 +46,9 @@ function QuestionBankPageContent() {
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark">
+      {/* Daily Bonus Modal */}
+      <DailyBonusModal />
+      
       {/* Top App Bar */}
       <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
         <div className="flex items-center p-4 pb-2 justify-between">
@@ -51,6 +56,8 @@ function QuestionBankPageContent() {
             Question Bank
           </h1>
           <div className="flex items-center gap-3">
+            {/* Token Balance */}
+            <TokenBalance compact showLabel={false} />
             {/* Streak Display */}
             <div className="flex items-center gap-1">
               <Icon name="local_fire_department" className="text-orange-500" />

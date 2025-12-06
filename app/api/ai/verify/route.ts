@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAIService } from "@/app/lib/services/ai";
+import { spendAIVerificationTokens, getCurrencyConfig } from "@/app/lib/services/currencyService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userAnswer, correctAnswers, questionText } = body;
+    const { userAnswer, correctAnswers, questionText, userId } = body;
 
     if (!userAnswer || typeof userAnswer !== "string") {
       return NextResponse.json(
@@ -39,6 +40,24 @@ export async function POST(request: NextRequest) {
         { error: "questionText is required" },
         { status: 400 }
       );
+    }
+
+    // Deduct tokens for AI verification if userId is provided
+    if (userId) {
+      const config = getCurrencyConfig();
+      const result = await spendAIVerificationTokens(userId);
+      
+      if (!result.success) {
+        return NextResponse.json(
+          {
+            error: "Insufficient balance",
+            required: config.costs.aiVerification,
+            balance: result.balance.balance,
+            currencyName: config.currency.name,
+          },
+          { status: 402 } // Payment Required
+        );
+      }
     }
 
     const result = await aiService.verifyAnswer({

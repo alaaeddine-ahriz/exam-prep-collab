@@ -23,5 +23,6 @@ export class SQLiteDataService implements IDataService {
 
 export { SQLiteQuestionService } from "./questionService";
 export { SQLiteUserService } from "./userService";
+export { SQLiteMasteryService, sqliteMasteryService } from "./masteryService";
 export { initializeDatabase, closeDatabase, getDatabase } from "./database";
 

@@ -110,6 +110,37 @@ export function initializeDatabase(): void {
       UNIQUE(user_id, question_id)
     );
 
+    -- User Balance table (currency system)
+    CREATE TABLE IF NOT EXISTS user_balance (
+      user_id TEXT PRIMARY KEY,
+      balance INTEGER NOT NULL DEFAULT 0,
+      last_daily_bonus_at TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    -- Currency Transactions table (audit log)
+    CREATE TABLE IF NOT EXISTS currency_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('vote', 'answer', 'daily_login', 'practice', 'ai_verify', 'initial_balance')),
+      description TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    -- Daily Practice Sessions table
+    CREATE TABLE IF NOT EXISTS daily_practice_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      session_date TEXT NOT NULL DEFAULT (DATE('now')),
+      session_count INTEGER NOT NULL DEFAULT 1,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, session_date)
+    );
+
     -- Create indexes for performance
     CREATE INDEX IF NOT EXISTS idx_questions_type ON questions(type);
     CREATE INDEX IF NOT EXISTS idx_mcq_options_question ON mcq_options(question_id);
@@ -122,6 +153,10 @@ export function initializeDatabase(): void {
     CREATE INDEX IF NOT EXISTS idx_mastery_question ON question_mastery(question_id);
     CREATE INDEX IF NOT EXISTS idx_mastery_next_review ON question_mastery(next_review_at);
     CREATE INDEX IF NOT EXISTS idx_mastery_user_next_review ON question_mastery(user_id, next_review_at);
+    CREATE INDEX IF NOT EXISTS idx_currency_transactions_user ON currency_transactions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_currency_transactions_type ON currency_transactions(type);
+    CREATE INDEX IF NOT EXISTS idx_currency_transactions_created ON currency_transactions(created_at);
+    CREATE INDEX IF NOT EXISTS idx_daily_practice_sessions_user_date ON daily_practice_sessions(user_id, session_date);
   `);
 }
 

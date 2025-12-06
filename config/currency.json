@@ -1,0 +1,20 @@
+{
+  "currency": {
+    "name": "Tokens",
+    "icon": "token",
+    "initialBalance": 200
+  },
+  "rewards": {
+    "castVote": 5,
+    "submitAnswer": 10,
+    "dailyLogin": 25
+  },
+  "costs": {
+    "practiceSession": 15,
+    "aiVerification": 20
+  },
+  "limits": {
+    "freePracticeSessionsPerDay": 3
+  }
+}
+

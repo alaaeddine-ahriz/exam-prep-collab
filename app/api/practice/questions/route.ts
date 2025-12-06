@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { masteryService } from "../../../lib/services/supabase/masteryService";
+import { masteryService as supabaseMasteryService } from "../../../lib/services/supabase/masteryService";
+import { sqliteMasteryService } from "../../../lib/services/sqlite/masteryService";
 import { PracticeMode } from "../../../lib/services/types";
+import { env } from "../../../lib/config";
+
+// Get the appropriate mastery service based on provider
+function getMasteryService() {
+  return env.dataProvider === "supabase" ? supabaseMasteryService : sqliteMasteryService;
+}
 
 /**
  * POST /api/practice/questions
@@ -31,6 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const masteryService = getMasteryService();
     let selectedIds: number[];
 
     switch (mode) {

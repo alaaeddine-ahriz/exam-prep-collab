@@ -207,3 +207,58 @@ export interface PracticeSettings {
   cramDays?: number; // Days until exam (1-7) for cram mode
 }
 
+// Currency types
+export type TransactionType = 
+  | "vote" 
+  | "answer" 
+  | "daily_login" 
+  | "practice" 
+  | "ai_verify"
+  | "initial_balance";
+
+export interface DBUserBalance {
+  user_id: string;
+  balance: number;
+  last_daily_bonus_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DBCurrencyTransaction {
+  id: number;
+  user_id: string;
+  amount: number;
+  type: TransactionType;
+  description: string | null;
+  created_at: string;
+}
+
+export interface DBDailyPracticeSession {
+  id: number;
+  user_id: string;
+  session_date: string;
+  session_count: number;
+}
+
+export interface UserBalance {
+  userId: string;
+  balance: number;
+  lastDailyBonusAt: Date | null;
+  canClaimDailyBonus: boolean;
+}
+
+export interface CurrencyTransaction {
+  id: number;
+  userId: string;
+  amount: number;
+  type: TransactionType;
+  description: string | null;
+  createdAt: Date;
+}
+
+export interface PracticeSessionInfo {
+  usedToday: number;
+  freeRemaining: number;
+  requiresPayment: boolean;
+}
+

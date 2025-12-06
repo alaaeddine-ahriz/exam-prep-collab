@@ -8,7 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { signUp, loading: authLoading } = useAuth();
+  const { signUp, loading: authLoading, isDevMode } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +45,12 @@ export default function SignUpPage() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess(true);
+        // In dev mode, redirect directly; in production, show email confirmation
+        if (isDevMode) {
+          router.push("/questions");
+        } else {
+          setSuccess(true);
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -105,6 +110,19 @@ export default function SignUpPage() {
               Join ExamPrep to start studying smarter
             </p>
           </div>
+
+          {/* Dev Mode Indicator */}
+          {isDevMode && (
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                <Icon name="code" size="sm" />
+                <span className="font-medium">Dev Mode</span>
+              </div>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                Create any account - no email verification needed
+              </p>
+            </div>
+          )}
 
           {/* Sign Up Form */}
           <Card className="mb-4">

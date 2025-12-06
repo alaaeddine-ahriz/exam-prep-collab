@@ -12,6 +12,7 @@ import {
   Button,
   MasteryRing,
   MasteryBadge,
+  TokenBalance,
 } from "../components";
 import { useApp } from "../context/AppContext";
 import { MasteryLevel } from "../lib/services/types";
@@ -221,7 +222,7 @@ function MenuItem({
 
 function ProfilePageContent() {
   const router = useRouter();
-  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode } = useApp();
+  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode, currencyInfo, claimDailyBonus } = useApp();
   const { user: authUser, signOut } = useAuth();
 
   // Bottom sheet states
@@ -229,6 +230,7 @@ function ProfilePageContent() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showCramSettings, setShowCramSettings] = useState(false);
   const [showDisableCramConfirm, setShowDisableCramConfirm] = useState(false);
+  const [showTokenDetails, setShowTokenDetails] = useState(false);
 
   // Edit profile state
   const [editName, setEditName] = useState("");
@@ -333,6 +335,44 @@ function ProfilePageContent() {
             </div>
           </Card>
         </div>
+
+        {/* Token Balance Section */}
+        {currencyInfo && (
+          <div className="px-4 mt-4">
+            <Card 
+              className="flex flex-col gap-4 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              onClick={() => setShowTokenDetails(true)}
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Icon name="toll" className="text-amber-600 dark:text-amber-400" />
+                  <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
+                    {currencyInfo.config.currencyName}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TokenBalance showLabel={false} />
+                  <Icon name="chevron_right" className="text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+   
+              {currencyInfo.canClaimDailyBonus && (
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await claimDailyBonus();
+                  }}
+                  className="!bg-amber-600 hover:!bg-amber-700"
+                >
+                  <Icon name="redeem" size="sm" />
+                  Claim Daily Bonus (+{currencyInfo.config.dailyLoginReward})
+                </Button>
+              )}
+            </Card>
+          </div>
+        )}
 
         {/* Cram Mode Section */}
         <div className="px-4 mt-4">
@@ -548,6 +588,117 @@ function ProfilePageContent() {
           ))}
         </div>
       </BottomSheet>
+
+      {/* Token Details Bottom Sheet */}
+      {currencyInfo && (
+        <BottomSheet
+          isOpen={showTokenDetails}
+          onClose={() => setShowTokenDetails(false)}
+          title={`${currencyInfo.config.currencyName} Details`}
+        >
+          <div className="p-4 flex flex-col gap-5">
+            {/* Current Balance */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-800/30">
+                  <Icon name="toll" size="lg" className="text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-amber-700 dark:text-amber-400">Current Balance</p>
+                  <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">
+                    {currencyInfo.balance.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Session Info */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50">
+                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Free Sessions Today</p>
+                <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                  {currencyInfo.freeSessionsRemaining}/{currencyInfo.config.freePracticeSessionsPerDay}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50">
+                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Daily Bonus</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  +{currencyInfo.config.dailyLoginReward}
+                </p>
+              </div>
+            </div>
+
+            {/* Earning Section */}
+            <div className="flex flex-col gap-3">
+              <h4 className="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wide">
+                Ways to Earn
+              </h4>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="how_to_vote" className="text-green-600 dark:text-green-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Vote on answer</span>
+                  </div>
+                  <span className="font-semibold text-green-600 dark:text-green-400">+{currencyInfo.config.voteReward}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="edit_note" className="text-green-600 dark:text-green-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Submit answer</span>
+                  </div>
+                  <span className="font-semibold text-green-600 dark:text-green-400">+{currencyInfo.config.answerReward}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="calendar_today" className="text-green-600 dark:text-green-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Daily login bonus</span>
+                  </div>
+                  <span className="font-semibold text-green-600 dark:text-green-400">+{currencyInfo.config.dailyLoginReward}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Spending Section */}
+            <div className="flex flex-col gap-3">
+              <h4 className="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wide">
+                Ways to Spend
+              </h4>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="fitness_center" className="text-red-600 dark:text-red-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Extra practice session</span>
+                  </div>
+                  <span className="font-semibold text-red-600 dark:text-red-400">-{currencyInfo.config.practiceSessionCost}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="smart_toy" className="text-red-600 dark:text-red-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">AI verification</span>
+                  </div>
+                  <span className="font-semibold text-red-600 dark:text-red-400">-{currencyInfo.config.aiVerificationCost}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Claim Daily Bonus Button */}
+            {currencyInfo.canClaimDailyBonus && (
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={async () => {
+                  await claimDailyBonus();
+                  setShowTokenDetails(false);
+                }}
+                className="!bg-amber-600 hover:!bg-amber-700 mt-2"
+              >
+                <Icon name="redeem" size="sm" />
+                Claim Daily Bonus (+{currencyInfo.config.dailyLoginReward})
+              </Button>
+            )}
+          </div>
+        </BottomSheet>
+      )}
 
       {/* Edit Profile Bottom Sheet */}
       <BottomSheet

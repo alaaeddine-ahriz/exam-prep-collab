@@ -115,7 +115,7 @@ function PracticeModeSetupPageContent() {
 
       <main className="flex-grow px-4 py-4 pb-28 space-y-6">
         {/* Token Balance Card */}
-        {currencyInfo && (
+        {/* {currencyInfo && (
           <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -143,7 +143,7 @@ function PracticeModeSetupPageContent() {
               )}
             </div>
           </Card>
-        )}
+        )} */}
 
         {/* Error message */}
         {error && (
@@ -153,7 +153,7 @@ function PracticeModeSetupPageContent() {
         )}
 
         {/* Current Mode Info */}
-        <Card className={isCramModeActive 
+        {/* <Card className={isCramModeActive 
           ? "bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800" 
           : "bg-primary/5 dark:bg-primary/10 border-primary/20"
         }>
@@ -174,7 +174,7 @@ function PracticeModeSetupPageContent() {
               </p>
             </div>
           </div>
-        </Card>
+        </Card> */}
 
         {/* Question Type Selection */}
         <section>

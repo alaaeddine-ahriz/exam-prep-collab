@@ -235,6 +235,21 @@ function PracticeQuizPageContent() {
     }
   };
 
+  const handleSkipAI = () => {
+    // Skip AI verification and just show result without AI analysis
+    setShowResult(true);
+    // Don't count as correct/incorrect - just move on
+    addToHistory({
+      questionId: currentQuestion.id,
+      questionText: currentQuestion.question,
+      questionType: currentQuestion.type,
+      userAnswer: saqAnswer,
+      consensusAnswer: getCorrectAnswer(currentQuestion),
+      isCorrect: false, // Skipped, not verified
+      answeredAt: new Date(),
+    });
+  };
+
   const handleNext = () => {
     if (currentQuestionIndex < practiceQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
@@ -413,21 +428,38 @@ function PracticeQuizPageContent() {
             </Button>
           )
         ) : !showResult ? (
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={handleCheckAnswer}
-            disabled={!canCheck || isVerifying}
-          >
-            {isVerifying ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                Analyzing Answer...
-              </span>
-            ) : (
-              "Check Answer"
-            )}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={handleCheckAnswer}
+              disabled={!canCheck || isVerifying}
+            >
+              {isVerifying ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                  Analyzing Answer...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  Check Answer
+                  {currencyInfo && (
+                    <span className="opacity-80">
+                      ({currencyInfo.config.aiVerificationCost} {currencyInfo.config.currencyName})
+                    </span>
+                  )}
+                </span>
+              )}
+            </Button>
+            <button
+              type="button"
+              onClick={handleSkipAI}
+              disabled={!canCheck || isVerifying}
+              className="text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-text-primary-light dark:hover:text-text-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed py-2"
+            >
+              Skip AI verification
+            </button>
+          </div>
         ) : (
           <Button variant="primary" fullWidth onClick={handleNext}>
             {currentQuestionIndex < practiceQuestions.length - 1 ? "Next Question" : "See Results"}

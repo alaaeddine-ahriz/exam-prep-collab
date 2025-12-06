@@ -116,7 +116,7 @@ function AchievementBadge({
               : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
           }`}
         >
-          <Icon name={unlocked ? icon : "lock"} size="lg" />
+          <Icon name={unlocked ? icon : "lock"} size="xl" />
         </div>
         <div className="flex-1 min-w-0">
           <p
@@ -148,7 +148,7 @@ function AchievementBadge({
             : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
         }`}
       >
-        <Icon name={unlocked ? icon : "lock"} size="xl" />
+        <Icon name={unlocked ? icon : "lock"} size="2xl" />
       </div>
       <p className="text-xs text-center font-medium text-text-secondary-light dark:text-text-secondary-dark">
         {label}

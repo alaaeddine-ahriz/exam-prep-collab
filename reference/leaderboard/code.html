@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Leaderboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 1,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2bcdee",
+              "background-light": "#f6f8f8",
+              "background-dark": "#101f22",
+            },
+            fontFamily: {
+              "display": ["Lexend"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-10 flex items-center justify-between bg-background-light/80 p-4 pb-2 backdrop-blur-sm dark:bg-background-dark/80">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-gray-800 dark:text-gray-200">arrow_back_ios_new</span>
+</div>
+<h2 class="flex-1 text-center text-lg font-bold tracking-tight text-gray-900 dark:text-gray-50">Leaderboard</h2>
+<div class="size-12 shrink-0"></div> <!-- Spacer -->
+</div>
+<!-- Segmented Buttons -->
+<div class="px-4 py-3">
+<div class="flex h-10 flex-1 items-center justify-center rounded-xl bg-gray-200/50 p-1 dark:bg-gray-800/50">
+<label class="flex h-full grow cursor-pointer items-center justify-center overflow-hidden rounded-lg px-2 text-sm font-medium leading-normal text-gray-500 has-[:checked]:bg-white has-[:checked]:text-gray-900 has-[:checked]:shadow-sm dark:text-gray-400 dark:has-[:checked]:bg-gray-700 dark:has-[:checked]:text-white">
+<span class="truncate">Overall</span>
+<input checked="" class="invisible w-0" name="leaderboard-toggle" type="radio" value="Overall"/>
+</label>
+<label class="flex h-full grow cursor-pointer items-center justify-center overflow-hidden rounded-lg px-2 text-sm font-medium leading-normal text-gray-500 has-[:checked]:bg-white has-[:checked]:text-gray-900 has-[:checked]:shadow-sm dark:text-gray-400 dark:has-[:checked]:bg-gray-700 dark:has-[:checked]:text-white">
+<span class="truncate">Accuracy</span>
+<input class="invisible w-0" name="leaderboard-toggle" type="radio" value="Accuracy"/>
+</label>
+<label class="flex h-full grow cursor-pointer items-center justify-center overflow-hidden rounded-lg px-2 text-sm font-medium leading-normal text-gray-500 has-[:checked]:bg-white has-[:checked]:text-gray-900 has-[:checked]:shadow-sm dark:text-gray-400 dark:has-[:checked]:bg-gray-700 dark:has-[:checked]:text-white">
+<span class="truncate">Voting</span>
+<input class="invisible w-0" name="leaderboard-toggle" type="radio" value="Voting"/>
+</label>
+</div>
+</div>
+<!-- Leaderboard List -->
+<div class="flex flex-col gap-2 px-4 pb-4">
+<!-- Rank 1 -->
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+<div class="flex w-8 shrink-0 items-center justify-center">
+<span class="material-symbols-outlined text-3xl text-yellow-400">emoji_events</span>
+</div>
+<div class="flex flex-1 items-center gap-4">
+<div class="h-12 w-12 shrink-0 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User avatar for Olivia" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDR3VeOrAjKzF1GI6YYnKgv5QRw0L5u-3fIXxOVkmFeX5U2bEQ_z6oBrZSI2vIKRZywjKWcsrL6zwJX6GmWRHvAF-6_0yAIpFbjbhavQWNtgbpzI46Jdw47aWhlG9g4C_siZNYhQZIw4VGqhH1CpXePHbpJ0ioMs3JvpuY-6JC6wj64Iv-dNagbfHl2Fw0vsgWECJ4i-Gjcs664ry8g8OydRusnKnY-MgskWh-1rWRmjT0xru3ax0ES4C-zZoE5dqC8DjoUp-3BMsc");'></div>
+<div class="flex flex-col justify-center">
+<p class="line-clamp-1 text-base font-medium text-gray-900 dark:text-gray-50">Olivia</p>
+<p class="line-clamp-2 text-sm font-normal text-gray-500 dark:text-gray-400">8,120 Points</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-gray-900 dark:text-gray-50">1</p></div>
+</div>
+<!-- Rank 2 -->
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+<div class="flex w-8 shrink-0 items-center justify-center">
+<span class="material-symbols-outlined text-3xl text-gray-400 dark:text-gray-500">emoji_events</span>
+</div>
+<div class="flex flex-1 items-center gap-4">
+<div class="h-12 w-12 shrink-0 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User avatar for Noah" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDmfHMCyXvgVy1eTBNgKAVoTD6IEqrmxU9pomD9hSDNa_CNnCBPiG9ekU990gAEZnUm3VgbkrX2ZcLcLAq_etiYLEvfAul7Le26URbAmwiFbWg2xW13X39_UtOwYqX1kDmE2I2H9BLkCyVDMPJWzP6P2DdDWfIM625lBJ2B2e9zanqwK6rIq-uZfHSat_E3WQ6wUwuIun4P8BHhedGfVwPBoi7o6amqmqG0-JVLzxS4JEIgWlV4ZVyZ-rb44Bbd3HMew-LqpYPLH-c");'></div>
+<div class="flex flex-col justify-center">
+<p class="line-clamp-1 text-base font-medium text-gray-900 dark:text-gray-50">Noah</p>
+<p class="line-clamp-2 text-sm font-normal text-gray-500 dark:text-gray-400">7,980 Points</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-gray-900 dark:text-gray-50">2</p></div>
+</div>
+<!-- Rank 3 -->
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+<div class="flex w-8 shrink-0 items-center justify-center">
+<span class="material-symbols-outlined text-3xl text-orange-400">emoji_events</span>
+</div>
+<div class="flex flex-1 items-center gap-4">
+<div class="h-12 w-12 shrink-0 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User avatar for Emma" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDwkp8ubgRN61YscVvwXcnCQPQMFNT9FTaUKh4FMBBT_3fG-THJbCzy23f2bwZOLwiNh4-bmE4PAFsKwHN4Mf3LUdYu_Rpewy2p3lwqsINFoCBgktZbiO6SJmAM1ecpy3yPLDUZVXCUfd_UBHqYdTC__HZqOyk6QzaTKr0GeCcIt8_al7nkT-zmu6Gi6rHzrTHgf7LlZSHakok1OZsGZEw1mKV7ZdPw8l7URuDs5SZxTZVd7B12Sf7XpOLXP798Hsk376occH7eRvw");'></div>
+<div class="flex flex-col justify-center">
+<p class="line-clamp-1 text-base font-medium text-gray-900 dark:text-gray-50">Emma</p>
+<p class="line-clamp-2 text-sm font-normal text-gray-500 dark:text-gray-400">7,550 Points</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-gray-900 dark:text-gray-50">3</p></div>
+</div>
+<!-- Rank 4 -->
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+<div class="flex w-8 shrink-0 items-center justify-center"></div>
+<div class="flex flex-1 items-center gap-4">
+<div class="h-12 w-12 shrink-0 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User avatar for Liam" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDpcipD_HPOovH068ErQpd8SoHIVGIsmUwijCSBNqoaFuXpwWy5mi_9JjAfPrQ9nSNVLiJpCr0wvfAyKGszNhgjjeXFchgj-tSNKpTz2HFuR2TS6K_MuB4yF-otIYuTctrmNVCXyPPL7rqhBEj7gVCINhAVHJ4ZEPMfEzQVJS9URKJi8j8_NdQIDOhCqWh2gzCmN3lIW2xYwCUMCiL-T-Zpre9fczaeoijan4oZUyCPKBJyB8eMeiSrp24vHsI_z-IluE32PAd8jBI");'></div>
+<div class="flex flex-col justify-center">
+<p class="line-clamp-1 text-base font-medium text-gray-900 dark:text-gray-50">Liam</p>
+<p class="line-clamp-2 text-sm font-normal text-gray-500 dark:text-gray-400">7,230 Points</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-gray-900 dark:text-gray-50">4</p></div>
+</div>
+<!-- Rank 5 -->
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+<div class="flex w-8 shrink-0 items-center justify-center"></div>
+<div class="flex flex-1 items-center gap-4">
+<div class="h-12 w-12 shrink-0 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User avatar for Charlotte" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBwBIdAe_FMUTfxuTWmcGpPIBidCp4Mg5QL8vOeHU4fATQHrFNHi0MNzc3yQzipaRWkqOlQOehrQPeF_yCrnBuvWA5hKUbvSbCPc0BNphBk3e5GBu_jZX-hf434yzLEBrN6ur7TW6jE6hTKp9dZHPM0-BK3FszTcwmTBldRCyx5_lXLrePXCPsVSlHw_cKarA_JQJV9gecXO-1dfukEba8QcUx6vRWQfP7LVmprtXS-JrAO-361FC7O2NbdG1GjOdqCA73cXHlnSRw");'></div>
+<div class="flex flex-col justify-center">
+<p class="line-clamp-1 text-base font-medium text-gray-900 dark:text-gray-50">Charlotte</p>
+<p class="line-clamp-2 text-sm font-normal text-gray-500 dark:text-gray-400">6,910 Points</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-gray-900 dark:text-gray-50">5</p></div>
+</div>
+<!-- Rank 6 -->
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+<div class="flex w-8 shrink-0 items-center justify-center"></div>
+<div class="flex flex-1 items-center gap-4">
+<div class="h-12 w-12 shrink-0 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User avatar for William" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCJnuVDCXBXyGZwcMjDGBoMS8x1fRgA9Qd9IR0bCo5fkz3hEAx44-DxD49zOa-G39Coa-KEtRiBNsuvf9erN1ovNCx7rjZRJeeMcvoaOU72KJnVsCgaDvd2gYZ100OjR-tWgJ_GoYkPoDWE_5rJtcq7g3vkOyy2Bkvjet1No8xqE_lXSt01FuNBZhtnRsp6HVr4wdBZAgpeL-KvUHMKoJq-nrvUsViyM0VMkfdFqBw2dA1YBPWiBSxh-ZDAkvSdAJ5Jk3Wf-jgBZvE");'></div>
+<div class="flex flex-col justify-center">
+<p class="line-clamp-1 text-base font-medium text-gray-900 dark:text-gray-50">William</p>
+<p class="line-clamp-2 text-sm font-normal text-gray-500 dark:text-gray-400">6,400 Points</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-gray-900 dark:text-gray-50">6</p></div>
+</div>
+<!-- Rank 7 -->
+<div class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+<div class="flex w-8 shrink-0 items-center justify-center"></div>
+<div class="flex flex-1 items-center gap-4">
+<div class="h-12 w-12 shrink-0 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User avatar for Sophia" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAczFz3-DFdlgArBYgEwd1d2912tDBFpvKp8kihRn6FU80iMQrj8RGVT6tBMHDNeEKVrcXVOjJIn3eOpMbL1K-6TlDJ9SKnkc5y52j9GLOjFofLga_t2O8eJgQvCM36z8no1cVXAa24WdS4byQYT0CJYujr-n2Ci-3egDylLA61usxyKYR9N09PGpMKZ8wo9NVg867QnN6BJOBjSsB5tAbxMfoR-gQUSA4j7JLD3rfZUuGHGg5xaKUhPDf0IVD7yVoIc74UvApU__Q");'></div>
+<div class="flex flex-col justify-center">
+<p class="line-clamp-1 text-base font-medium text-gray-900 dark:text-gray-50">Sophia</p>
+<p class="line-clamp-2 text-sm font-normal text-gray-500 dark:text-gray-400">5,890 Points</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-gray-900 dark:text-gray-50">7</p></div>
+</div>
+</div>
+<!-- Sticky Current User Card -->
+<div class="sticky bottom-0 mt-auto bg-background-light p-4 dark:bg-background-dark">
+<div class="flex items-stretch justify-between gap-4 rounded-xl bg-primary/20 p-4 dark:bg-primary/30">
+<div class="flex flex-[2_2_0px] flex-col justify-center gap-1">
+<p class="text-sm font-medium text-primary dark:text-cyan-200">You are #8</p>
+<p class="text-base font-bold text-gray-900 dark:text-white">Javier</p>
+<p class="text-sm font-normal text-gray-600 dark:text-gray-300">5,280 Points</p>
+</div>
+<div class="flex-1">
+<div class="aspect-square w-full rounded-xl bg-cover bg-center bg-no-repeat" data-alt="User avatar for Javier" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuACCEu3hW2eJUbsCKlVId2ctT0g5-emQN3rZPjVoAaNtzqYamWGiVkPG9EaKFJHihNzqLTOARLFXmxX4DTR0jdDcKnNfB5ifaq7C0is0CoAVBUcEJEHmtzW9bE_GnN2bN9Jico3T0IGX9okCAVs4sY7BjxPPkXGMDfo4b4KAJDOqOPYtVwR_-ve0AOWEHNqDm_sPMslrgg3rb0h-sazXKmX65WY1tb2Ol-wIjexAZ4UyFWn50vD2dWnI2Pfuw7yGQ5fxUsqX0ZNbZs");'></div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

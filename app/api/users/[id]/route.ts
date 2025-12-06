@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
+
     // Don't create records for "local-user" in production with Supabase
     if (id === "local-user" && env.dataProvider === "supabase") {
       return NextResponse.json({
@@ -30,30 +30,42 @@ export async function GET(
         examDate: null,
       });
     }
-    
+
     const service = await getDataService();
-    
+
     // Get user's email from the request header if available (set by auth middleware)
     const userEmail = request.headers.get("x-user-email");
-    
+
     let user = await service.users.getUserById(id);
 
     // If user doesn't exist, create them with default values
     // The name will be updated when they take actions
     if (!user) {
       // Extract a display name from the ID or email
-      const displayName = userEmail 
-        ? userEmail.split("@")[0]
-        : id.includes("@") 
-          ? id.split("@")[0] 
-          : id === "local-user" 
-            ? "Guest" 
-            : "User";
-      
+      let displayName = "User";
+      let email = userEmail || `${id}@local`;
+
+      if (userEmail) {
+        // If we have the user's email, use the prefix as name
+        displayName = userEmail.split("@")[0];
+        email = userEmail;
+      } else if (id.includes("@")) {
+        // If ID is an email, use the prefix
+        displayName = id.split("@")[0];
+        email = id;
+      } else if (id === "local-user") {
+        displayName = "Guest";
+        email = "guest@local";
+      } else if (id.startsWith("dev-user-")) {
+        // Dev users - the email will come from x-user-email header
+        // Fall back to something readable
+        displayName = "Dev User";
+      }
+
       user = await service.users.createUser({
         id,
         name: displayName,
-        email: userEmail || (id.includes("@") ? id : `${id}@local`),
+        email,
       });
     }
 
@@ -82,7 +94,7 @@ export async function PATCH(
     const { exam_date } = body;
 
     const service = await getDataService();
-    
+
     // Update exam_date in database
     await service.users.updateExamDate(id, exam_date);
 

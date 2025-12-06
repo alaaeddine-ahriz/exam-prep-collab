@@ -31,3 +31,6 @@ export { FloatingActionButton } from "./FloatingActionButton";
 export { PageIndicator } from "./PageIndicator";
 export { ProtectedRoute } from "./ProtectedRoute";
 
+// Leaderboard Components
+export { LeaderboardRankCard } from "./LeaderboardRankCard";
+export { CurrentUserCard } from "./CurrentUserCard";

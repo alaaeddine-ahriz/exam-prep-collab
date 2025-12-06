@@ -14,6 +14,7 @@ export { QuestionTypeBadge } from "./QuestionTypeBadge";
 export { MasteryBadge, MasteryIndicator, MasteryRing } from "./MasteryBadge";
 export { TokenBalance } from "./TokenBalance";
 export { DailyBonusModal } from "./DailyBonusModal";
+export { TokenToastProvider, useTokenToast } from "./TokenToast";
 
 // Form Components
 export { RadioOption } from "./RadioOption";

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { Question, User, AnswerHistory, QuestionMastery, MasteryStats, PracticeMode } from "../lib/services/types";
 import { useAuth } from "./AuthContext";
+import { useTokenToast } from "../components";
 
 // User votes by question ID
 type UserVotes = Record<number, { optionId?: string; answerId?: string }>;
@@ -89,6 +90,7 @@ const calculateDaysUntilExam = (examDateStr: string | null): number | null => {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user: authUser } = useAuth();
+  const { showTokenToast } = useTokenToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [userVotes, setUserVotes] = useState<UserVotes>({});
@@ -221,12 +223,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       const data = await response.json();
       await refreshCurrency();
+      
+      // Show toast for daily bonus
+      if (data.amount) {
+        showTokenToast(data.amount, "Daily login bonus");
+      }
+      
       return { success: true, amount: data.amount };
     } catch (err) {
       console.error("Error claiming daily bonus:", err);
       return { success: false };
     }
-  }, [getCurrentUserId, refreshCurrency]);
+  }, [getCurrentUserId, refreshCurrency, showTokenToast]);
 
   // Fetch mastery data
   const refreshMastery = useCallback(async (force: boolean = false) => {
@@ -362,6 +370,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw new Error("Failed to vote");
       }
       
+      const data = await response.json();
+      
+      // Show toast if tokens were awarded (first vote on this question)
+      if (data.tokensAwarded !== undefined && currencyInfo) {
+        const reward = currencyInfo.config.voteReward;
+        showTokenToast(reward, "Voted on answer");
+      }
+      
       await Promise.all([refreshQuestions(), refreshCurrency()]);
     } catch (err) {
       console.error("Error voting:", err);
@@ -400,6 +416,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw new Error("Failed to vote");
       }
       
+      const data = await response.json();
+      
+      // Show toast if tokens were awarded (first vote on this question)
+      if (data.tokensAwarded !== undefined && currencyInfo) {
+        const reward = currencyInfo.config.voteReward;
+        showTokenToast(reward, "Voted on answer");
+      }
+      
       await Promise.all([refreshQuestions(), refreshCurrency()]);
     } catch (err) {
       console.error("Error voting:", err);
@@ -429,6 +453,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ text: answerText, createdBy: userName, userId }),
       });
       if (!response.ok) throw new Error("Failed to add answer");
+      
+      const data = await response.json();
+      
+      // Show toast if tokens were awarded
+      if (data.tokensAwarded !== undefined && currencyInfo) {
+        const reward = currencyInfo.config.answerReward;
+        showTokenToast(reward, "Submitted answer");
+      }
+      
       await Promise.all([refreshQuestions(), refreshCurrency()]);
     } catch (err) {
       console.error("Error adding answer:", err);

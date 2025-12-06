@@ -3,6 +3,7 @@ import { Lexend } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import { AppProvider } from "./context/AppContext";
+import { TokenToastProvider } from "./components";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -56,11 +57,13 @@ export default function RootLayout({
         />
       </head>
       <body className={`${lexend.variable} font-sans antialiased`}>
-        <AuthProvider>
-          <AppProvider>
-            {children}
-          </AppProvider>
-        </AuthProvider>
+        <TokenToastProvider>
+          <AuthProvider>
+            <AppProvider>
+              {children}
+            </AppProvider>
+          </AuthProvider>
+        </TokenToastProvider>
       </body>
     </html>
   );

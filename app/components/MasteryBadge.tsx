@@ -112,15 +112,13 @@ export function MasteryIndicator({ level, className = "" }: MasteryIndicatorProp
   const config = MASTERY_CONFIG[level];
 
   return (
-    <div
-      className={`
-        flex items-center justify-center w-6 h-6 rounded-full
-        ${config.bgColor} ${className}
-      `}
-      title={config.label}
-    >
-      <Icon name={config.icon} size="sm" className={config.textColor} />
-    </div>
+    <span title={config.label} className={className}>
+      <Icon
+        name={config.icon}
+        size="sm"
+        className={config.textColor}
+      />
+    </span>
   );
 }
 

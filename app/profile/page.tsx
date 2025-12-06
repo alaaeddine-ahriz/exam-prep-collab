@@ -103,28 +103,25 @@ function AchievementBadge({
   if (showDescription) {
     return (
       <div
-        className={`flex items-center gap-4 p-4 rounded-xl border ${
-          unlocked
-            ? "border-primary/30 bg-primary/5"
-            : "border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark"
-        }`}
+        className={`flex items-center gap-4 p-4 rounded-xl border ${unlocked
+          ? "border-primary/30 bg-primary/5"
+          : "border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark"
+          }`}
       >
         <div
-          className={`flex items-center justify-center w-14 h-14 rounded-full flex-shrink-0 ${
-            unlocked
-              ? "bg-primary/20 text-primary"
-              : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
-          }`}
+          className={`flex items-center justify-center w-14 h-14 rounded-full flex-shrink-0 ${unlocked
+            ? "bg-primary/20 text-primary"
+            : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
+            }`}
         >
           <Icon name={unlocked ? icon : "lock"} size="xl" />
         </div>
         <div className="flex-1 min-w-0">
           <p
-            className={`font-bold ${
-              unlocked
-                ? "text-text-primary-light dark:text-text-primary-dark"
-                : "text-text-secondary-light dark:text-text-secondary-dark"
-            }`}
+            className={`font-bold ${unlocked
+              ? "text-text-primary-light dark:text-text-primary-dark"
+              : "text-text-secondary-light dark:text-text-secondary-dark"
+              }`}
           >
             {label}
           </p>
@@ -142,11 +139,10 @@ function AchievementBadge({
   return (
     <div className="flex flex-col items-center gap-2 flex-shrink-0 w-20">
       <div
-        className={`flex items-center justify-center w-16 h-16 rounded-full ${
-          unlocked
-            ? "bg-primary/20 text-primary"
-            : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
-        }`}
+        className={`flex items-center justify-center w-16 h-16 rounded-full ${unlocked
+          ? "bg-primary/20 text-primary"
+          : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
+          }`}
       >
         <Icon name={unlocked ? icon : "lock"} size="2xl" />
       </div>
@@ -184,11 +180,10 @@ function MenuItem({
         }
       />
       <span
-        className={`flex-1 text-base font-medium ${
-          isDanger
-            ? "text-error"
-            : "text-text-primary-light dark:text-text-primary-dark"
-        }`}
+        className={`flex-1 text-base font-medium ${isDanger
+          ? "text-error"
+          : "text-text-primary-light dark:text-text-primary-dark"
+          }`}
       >
         {label}
       </span>
@@ -201,9 +196,8 @@ function MenuItem({
     </>
   );
 
-  const className = `flex items-center p-4 gap-4 w-full text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${
-    isDanger ? "text-error" : ""
-  }`;
+  const className = `flex items-center p-4 gap-4 w-full text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${isDanger ? "text-error" : ""
+    }`;
 
   if (href) {
     return (
@@ -234,7 +228,7 @@ function ProfilePageContent() {
 
   // Edit profile state
   const [editName, setEditName] = useState("");
-  
+
   // Cram mode date picker
   const [selectedExamDate, setSelectedExamDate] = useState<string>("");
 
@@ -339,7 +333,7 @@ function ProfilePageContent() {
         {/* Token Balance Section */}
         {currencyInfo && (
           <div className="px-4 mt-4">
-            <Card 
+            <Card
               className="flex flex-col gap-4 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
               onClick={() => setShowTokenDetails(true)}
             >
@@ -355,7 +349,7 @@ function ProfilePageContent() {
                   <Icon name="chevron_right" className="text-amber-600 dark:text-amber-400" />
                 </div>
               </div>
-   
+
               {currencyInfo.canClaimDailyBonus && (
                 <Button
                   variant="primary"
@@ -379,9 +373,9 @@ function ProfilePageContent() {
           <Card className={`flex flex-col gap-4 ${isCramModeActive ? "bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800" : ""}`}>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <Icon 
-                  name="bolt" 
-                  className={isCramModeActive ? "text-violet-600 dark:text-violet-400" : "text-text-secondary-light dark:text-text-secondary-dark"} 
+                <Icon
+                  name="bolt"
+                  className={isCramModeActive ? "text-violet-600 dark:text-violet-400" : "text-text-secondary-light dark:text-text-secondary-dark"}
                 />
                 <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
                   Cram Mode
@@ -409,7 +403,7 @@ function ProfilePageContent() {
                 </button>
               )}
             </div>
-            
+
             {isCramModeActive && daysUntilExam !== null ? (
               <div className="flex items-center gap-4">
                 <div className="flex-1">
@@ -447,26 +441,26 @@ function ProfilePageContent() {
                   </button>
                 )}
               </div>
-              
+
               <div className="flex items-center gap-6">
                 {/* Mastery Ring */}
                 <div className="relative flex-shrink-0">
                   <MasteryRing
-                    masteredPercent={masteryStats.totalQuestions > 0 
-                      ? (masteryStats.masteredCount / masteryStats.totalQuestions) * 100 
+                    masteredPercent={masteryStats.totalQuestions > 0
+                      ? (masteryStats.masteredCount / masteryStats.totalQuestions) * 100
                       : 0}
-                    reviewingPercent={masteryStats.totalQuestions > 0 
-                      ? (masteryStats.reviewingCount / masteryStats.totalQuestions) * 100 
+                    reviewingPercent={masteryStats.totalQuestions > 0
+                      ? (masteryStats.reviewingCount / masteryStats.totalQuestions) * 100
                       : 0}
-                    learningPercent={masteryStats.totalQuestions > 0 
-                      ? (masteryStats.learningCount / masteryStats.totalQuestions) * 100 
+                    learningPercent={masteryStats.totalQuestions > 0
+                      ? (masteryStats.learningCount / masteryStats.totalQuestions) * 100
                       : 0}
                     size={100}
                     strokeWidth={10}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
-                      {masteryStats.totalQuestions > 0 
+                      {masteryStats.totalQuestions > 0
                         ? Math.round((masteryStats.masteredCount / masteryStats.totalQuestions) * 100)
                         : 0}%
                     </span>
@@ -753,6 +747,7 @@ function ProfilePageContent() {
         isOpen={showCramSettings}
         onClose={() => setShowCramSettings(false)}
         title="Cram Mode Settings"
+        allowOverflow
       >
         <div className="p-4 flex flex-col gap-4">
           <div className="flex items-start gap-3 p-4 rounded-xl bg-violet-50 dark:bg-violet-900/20">
@@ -762,7 +757,7 @@ function ProfilePageContent() {
                 What is Cram Mode?
               </p>
               <p className="text-sm text-violet-700 dark:text-violet-300 mt-1">
-                Cram mode uses compressed review intervals to help you cover all questions before your exam. 
+                Cram mode uses compressed review intervals to help you cover all questions before your exam.
                 It will automatically disable after your exam date.
               </p>
             </div>
@@ -793,8 +788,8 @@ function ProfilePageContent() {
             >
               Cancel
             </Button>
-            <Button 
-              fullWidth 
+            <Button
+              fullWidth
               onClick={() => {
                 if (selectedExamDate) {
                   setExamDate(new Date(selectedExamDate));
@@ -803,7 +798,7 @@ function ProfilePageContent() {
               }}
               disabled={!selectedExamDate}
             >
-              Enable Cram Mode
+              Enable
             </Button>
           </div>
         </div>
@@ -823,7 +818,7 @@ function ProfilePageContent() {
                 Are you sure?
               </p>
               <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                Disabling cram mode will return to normal spaced repetition intervals. 
+                Disabling cram mode will return to normal spaced repetition intervals.
                 Your mastery progress will be preserved.
               </p>
             </div>
@@ -837,8 +832,8 @@ function ProfilePageContent() {
             >
               Keep Enabled
             </Button>
-            <Button 
-              fullWidth 
+            <Button
+              fullWidth
               onClick={() => {
                 setExamDate(null);
                 setShowDisableCramConfirm(false);

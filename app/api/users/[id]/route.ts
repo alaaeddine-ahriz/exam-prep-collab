@@ -39,3 +39,28 @@ export async function GET(
   }
 }
 
+/**
+ * PATCH /api/users/[id]
+ * Update user settings (e.g., exam_date for cram mode)
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { exam_date } = body;
+
+    const service = await getDataService();
+    
+    // Update exam_date in database
+    await service.users.updateExamDate(id, exam_date);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+  }
+}
+

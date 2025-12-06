@@ -11,18 +11,27 @@ import {
   FloatingActionButton,
   Button,
   ProtectedRoute,
+  MasteryIndicator,
 } from "../components";
 import { useApp } from "../context/AppContext";
 import { getConsensusPercent, getTopAnswer, getTotalVotes } from "../lib/utils";
 
 function QuestionBankPageContent() {
   const router = useRouter();
-  const { questions, currentUserName, user } = useApp();
+  const { questions, currentUserName, user, getMasteryForQuestion, masteryStats } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "mcq" | "saq">("all");
+  const [filterType, setFilterType] = useState<"all" | "mcq" | "saq" | "due">("all");
 
   const filteredQuestions = questions.filter((q) => {
     const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Type filter
+    if (filterType === "due") {
+      const mastery = getMasteryForQuestion(q.id);
+      const isDue = mastery?.nextReviewAt ? new Date(mastery.nextReviewAt) <= new Date() : true;
+      return matchesSearch && isDue;
+    }
+    
     const matchesType = filterType === "all" || q.type === filterType;
     return matchesSearch && matchesType;
   });
@@ -34,7 +43,7 @@ function QuestionBankPageContent() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
+    <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark">
       {/* Top App Bar */}
       <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
         <div className="flex items-center p-4 pb-2 justify-between">
@@ -69,20 +78,25 @@ function QuestionBankPageContent() {
         />
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 px-4 pb-4">
-          {(["all", "mcq", "saq"] as const).map((type) => (
+        <div className="flex gap-2 px-4 pb-4 overflow-x-auto">
+          {(["all", "due", "mcq", "saq"] as const).map((type) => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
               className={`
-                px-4 py-2 rounded-full text-sm font-medium transition-colors
+                px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1.5
                 ${filterType === type
                   ? "bg-primary text-white"
                   : "bg-surface-light dark:bg-surface-dark text-text-secondary-light dark:text-text-secondary-dark border border-border-light dark:border-border-dark"
                 }
               `}
             >
-              {type === "all" ? "All" : type.toUpperCase()}
+              {type === "all" ? "All" : type === "due" ? (
+                <>
+                  <Icon name="schedule" size="sm" />
+                  Due ({masteryStats?.dueToday ?? 0})
+                </>
+              ) : type.toUpperCase()}
             </button>
           ))}
         </div>
@@ -94,6 +108,8 @@ function QuestionBankPageContent() {
               const consensusPercent = getConsensusPercent(q);
               const topAnswer = getTopAnswer(q);
               const totalVotes = getTotalVotes(q);
+              const mastery = getMasteryForQuestion(q.id);
+              const masteryLevel = mastery?.masteryLevel ?? "new";
 
               return (
                 <Card
@@ -103,17 +119,20 @@ function QuestionBankPageContent() {
                 >
                   <div className="flex flex-col gap-2">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-text-primary-light dark:text-text-primary-dark text-base font-bold leading-tight tracking-tight flex-1">
-                        {q.question}
-                      </p>
+                      <div className="flex items-start gap-2 flex-1">
+                        <MasteryIndicator level={masteryLevel} className="mt-0.5 flex-shrink-0" />
+                        <p className="text-text-primary-light dark:text-text-primary-dark text-base font-bold leading-tight tracking-tight">
+                          {q.question}
+                        </p>
+                      </div>
                       <QuestionTypeBadge type={q.type} />
                     </div>
                     
-                    <p className="text-text-secondary-light dark:text-slate-400 text-sm font-normal leading-normal">
+                    <p className="text-text-secondary-light dark:text-slate-400 text-sm font-normal leading-normal pl-8">
                       Top Answer: {topAnswer.length > 80 ? topAnswer.substring(0, 80) + "..." : topAnswer}
                     </p>
                     
-                    <div className="flex items-center gap-3 justify-between pt-2">
+                    <div className="flex items-center gap-3 justify-between pt-2 pl-8">
                       <ProgressBar
                         value={consensusPercent}
                         variant={getConsensusColor(consensusPercent) as "success" | "warning" | "error"}
@@ -126,7 +145,7 @@ function QuestionBankPageContent() {
                     </div>
 
                     {/* Added by */}
-                    <div className="flex items-center gap-1.5 pt-1 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                    <div className="flex items-center gap-1.5 pt-1 pl-8 text-xs text-text-secondary-light dark:text-text-secondary-dark">
                       <Icon name="person" size="sm" className="opacity-60" />
                       <span>Added by <span className="font-medium">{q.createdBy}</span></span>
                     </div>

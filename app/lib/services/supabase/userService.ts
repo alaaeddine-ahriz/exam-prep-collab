@@ -65,6 +65,7 @@ export class SupabaseUserService implements IUserService {
       stats,
       history,
       joinedAt: new Date(user.created_at),
+      examDate: user.exam_date || null,
     };
   }
 
@@ -233,6 +234,17 @@ export class SupabaseUserService implements IUserService {
       name: "Guest",
       email: "guest@local",
     });
+  }
+
+  async updateExamDate(userId: string, examDate: string | null): Promise<void> {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase
+      .from("users")
+      .update({ exam_date: examDate })
+      .eq("id", userId);
+
+    if (error) throw error;
   }
 }
 

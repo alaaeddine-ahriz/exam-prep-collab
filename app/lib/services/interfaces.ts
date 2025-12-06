@@ -43,6 +43,7 @@ export interface IUserService {
   createUser(dto: CreateUserDTO): Promise<User>;
   updateStreak(userId: string, streak: number): Promise<void>;
   updateLastActive(userId: string): Promise<void>;
+  updateExamDate(userId: string, examDate: string | null): Promise<void>;
 
   // History
   recordHistory(dto: RecordHistoryDTO): Promise<void>;

@@ -56,7 +56,7 @@ export default function SignUpPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
         <Card className="w-full max-w-md text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
             <Icon name="check_circle" size="xl" className="text-success" />
@@ -78,7 +78,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background-light dark:bg-background-dark">
+    <div className="min-h-dvh flex flex-col bg-background-light dark:bg-background-dark">
       {/* Header */}
       <header className="p-4">
         <button

@@ -11,6 +11,7 @@ export { QuestionCard, type QuestionStatus } from "./QuestionCard";
 export { FeatureCard } from "./FeatureCard";
 export { SAQAnswerCard } from "./SAQAnswerCard";
 export { QuestionTypeBadge } from "./QuestionTypeBadge";
+export { MasteryBadge, MasteryIndicator, MasteryRing } from "./MasteryBadge";
 
 // Form Components
 export { RadioOption } from "./RadioOption";

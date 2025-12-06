@@ -4,7 +4,7 @@ import { Button, Icon } from "../components";
 
 export default function OfflinePage() {
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
+    <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
       <div className="text-center max-w-md">
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 rounded-full bg-warning/20 flex items-center justify-center">

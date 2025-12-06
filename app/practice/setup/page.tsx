@@ -8,12 +8,13 @@ import {
   Button,
   Icon,
   ProtectedRoute,
+  Card,
 } from "../../components";
 import { useApp } from "../../context/AppContext";
 
 function PracticeModeSetupPageContent() {
   const router = useRouter();
-  const { questions } = useApp();
+  const { questions, masteryStats, isCramModeActive, daysUntilExam } = useApp();
   
   const [questionSource, setQuestionSource] = useState<"all" | "mcq" | "saq">("all");
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
@@ -25,11 +26,26 @@ function PracticeModeSetupPageContent() {
   const maxQuestions = Math.min(filteredCount, 50);
 
   const handleStartPractice = () => {
-    router.push(`/practice/quiz?source=${questionSource}&count=${numberOfQuestions}`);
+    const params = new URLSearchParams({
+      source: questionSource,
+      count: String(Math.min(numberOfQuestions, maxQuestions)),
+    });
+    
+    router.push(`/practice/quiz?${params.toString()}`);
+  };
+
+  // Get mode info text based on global settings
+  const getModeInfo = () => {
+    if (isCramModeActive && daysUntilExam !== null) {
+      return `Cram Mode: ${daysUntilExam} day${daysUntilExam !== 1 ? "s" : ""} until exam`;
+    }
+    return masteryStats?.dueToday 
+      ? `Smart Review: ${masteryStats.dueToday} questions due`
+      : "Smart Review: Prioritizes questions you need to practice";
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
+    <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark">
       {/* Top App Bar */}
       <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark">
         <div className="flex items-center p-4 justify-between">
@@ -40,25 +56,48 @@ function PracticeModeSetupPageContent() {
             <Icon name="close" />
           </button>
           <h1 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-tight">
-            Practice Mode
+            Practice Setup
           </h1>
           <div className="w-10" />
         </div>
       </header>
 
-      <main className="flex-grow px-4 py-4 pb-28">
-        {/* Headline Text */}
-        <h2 className="text-text-primary-light dark:text-text-primary-dark tracking-tight text-2xl font-bold leading-tight pb-4">
-          Choose your question type
-        </h2>
+      <main className="flex-grow px-4 py-4 pb-28 space-y-6">
+        {/* Current Mode Info */}
+        <Card className={isCramModeActive 
+          ? "bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800" 
+          : "bg-primary/5 dark:bg-primary/10 border-primary/20"
+        }>
+          <div className="flex items-center gap-3">
+            <Icon 
+              name={isCramModeActive ? "bolt" : "psychology"} 
+              className={isCramModeActive ? "text-violet-600 dark:text-violet-400" : "text-primary"} 
+            />
+            <div className="flex-1">
+              <p className={`text-sm font-medium ${isCramModeActive ? "text-violet-800 dark:text-violet-200" : "text-text-primary-light dark:text-text-primary-dark"}`}>
+                {getModeInfo()}
+              </p>
+              <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
+                {isCramModeActive 
+                  ? "Change cram mode settings in your Profile" 
+                  : "Enable cram mode in your Profile for exam prep"
+                }
+              </p>
+            </div>
+          </div>
+        </Card>
 
-        {/* Radio List */}
-        <div className="flex flex-col gap-3 mb-6">
+        {/* Question Type Selection */}
+        <section>
+          <h2 className="text-text-primary-light dark:text-text-primary-dark tracking-tight text-xl font-bold leading-tight pb-3">
+            Question Type
+        </h2>
+          <div className="flex flex-col gap-3">
           <RadioOption
             id="all"
             name="question_source"
             label="All Questions"
-            description={`Practice from all ${questions.length} questions.`}
+              description={`Practice from all ${questions.length} questions`}
             checked={questionSource === "all"}
             onChange={() => setQuestionSource("all")}
           />
@@ -66,7 +105,7 @@ function PracticeModeSetupPageContent() {
             id="mcq"
             name="question_source"
             label="Multiple Choice Only"
-            description={`Practice ${questions.filter(q => q.type === "mcq").length} MCQ questions.`}
+              description={`${questions.filter(q => q.type === "mcq").length} MCQ questions`}
             checked={questionSource === "mcq"}
             onChange={() => setQuestionSource("mcq")}
           />
@@ -74,13 +113,15 @@ function PracticeModeSetupPageContent() {
             id="saq"
             name="question_source"
             label="Short Answer Only"
-            description={`Practice ${questions.filter(q => q.type === "saq").length} SAQ questions.`}
+              description={`${questions.filter(q => q.type === "saq").length} SAQ questions`}
             checked={questionSource === "saq"}
             onChange={() => setQuestionSource("saq")}
           />
         </div>
+        </section>
 
-        {/* Slider */}
+        {/* Number of Questions Slider */}
+        <section>
         <Slider
           label="Number of Questions"
           value={Math.min(numberOfQuestions, maxQuestions)}
@@ -89,6 +130,7 @@ function PracticeModeSetupPageContent() {
           step={1}
           onChange={setNumberOfQuestions}
         />
+        </section>
       </main>
 
       {/* Fixed Bottom CTA */}

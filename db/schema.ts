@@ -5,7 +5,7 @@
  * It serves as the source of truth for both SQLite and Supabase implementations.
  */
 
-export const SCHEMA_VERSION = "001";
+export const SCHEMA_VERSION = "003";
 
 /**
  * Table: users
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url TEXT,
   streak INTEGER DEFAULT 0,
   last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  exam_date TIMESTAMP
 );
 `;
 
@@ -100,6 +101,27 @@ CREATE TABLE IF NOT EXISTS user_history (
 `;
 
 /**
+ * Table: question_mastery
+ * Tracks spaced repetition data for each user-question pair
+ * Implements SM-2 algorithm with support for cram mode
+ */
+export const QUESTION_MASTERY_TABLE = `
+CREATE TABLE IF NOT EXISTS question_mastery (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+  ease_factor REAL DEFAULT 2.5,
+  interval_days REAL DEFAULT 0,
+  repetitions INTEGER DEFAULT 0,
+  next_review_at TIMESTAMP,
+  last_reviewed_at TIMESTAMP,
+  quality_sum INTEGER DEFAULT 0,
+  review_count INTEGER DEFAULT 0,
+  UNIQUE(user_id, question_id)
+);
+`;
+
+/**
  * All tables in creation order (respecting foreign key dependencies)
  */
 export const ALL_TABLES = [
@@ -109,6 +131,7 @@ export const ALL_TABLES = [
   { name: "saq_answers", sql: SAQ_ANSWERS_TABLE },
   { name: "votes", sql: VOTES_TABLE },
   { name: "user_history", sql: USER_HISTORY_TABLE },
+  { name: "question_mastery", sql: QUESTION_MASTERY_TABLE },
 ];
 
 /**
@@ -122,6 +145,9 @@ CREATE INDEX IF NOT EXISTS idx_votes_user ON votes(user_id);
 CREATE INDEX IF NOT EXISTS idx_votes_question ON votes(question_id);
 CREATE INDEX IF NOT EXISTS idx_history_user ON user_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_history_question ON user_history(question_id);
+CREATE INDEX IF NOT EXISTS idx_mastery_user ON question_mastery(user_id);
+CREATE INDEX IF NOT EXISTS idx_mastery_question ON question_mastery(question_id);
+CREATE INDEX IF NOT EXISTS idx_mastery_next_review ON question_mastery(next_review_at);
 `;
 
 /**
@@ -136,6 +162,7 @@ export interface SchemaTypes {
     streak: number;
     last_active: string;
     created_at: string;
+    exam_date: string | null;
   };
   questions: {
     id: number;
@@ -175,6 +202,18 @@ export interface SchemaTypes {
     consensus_answer: string;
     is_correct: boolean;
     answered_at: string;
+  };
+  question_mastery: {
+    id: string;
+    user_id: string;
+    question_id: number;
+    ease_factor: number;
+    interval_days: number;
+    repetitions: number;
+    next_review_at: string | null;
+    last_reviewed_at: string | null;
+    quality_sum: number;
+    review_count: number;
   };
 }
 

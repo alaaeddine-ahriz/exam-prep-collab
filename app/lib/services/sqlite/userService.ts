@@ -66,6 +66,7 @@ export class SQLiteUserService implements IUserService {
       stats,
       history,
       joinedAt: new Date(user.created_at),
+      examDate: user.exam_date || null,
     };
   }
 
@@ -206,6 +207,14 @@ export class SQLiteUserService implements IUserService {
 
     // Update last active
     await this.updateLastActive(dto.userId);
+  }
+
+  async updateExamDate(userId: string, examDate: string | null): Promise<void> {
+    const db = getDatabase();
+
+    db.prepare(`
+      UPDATE users SET exam_date = ? WHERE id = ?
+    `).run(examDate, userId);
   }
 
   // Ensure default user exists (for backwards compatibility)

@@ -12,6 +12,7 @@ export interface DBUser {
   streak: number;
   last_active: string; // ISO date string
   created_at: string;
+  exam_date: string | null; // ISO date string for cram mode
 }
 
 export interface DBQuestion {
@@ -56,6 +57,19 @@ export interface DBUserHistory {
   consensus_answer: string;
   is_correct: boolean;
   answered_at: string;
+}
+
+export interface DBQuestionMastery {
+  id: string;
+  user_id: string;
+  question_id: number;
+  ease_factor: number;
+  interval_days: number;
+  repetitions: number;
+  next_review_at: string | null;
+  last_reviewed_at: string | null;
+  quality_sum: number;
+  review_count: number;
 }
 
 // Service response types (frontend-friendly)
@@ -113,6 +127,7 @@ export interface User {
   stats: UserStats;
   history: AnswerHistory[];
   joinedAt: Date;
+  examDate: string | null; // ISO date string for cram mode
 }
 
 // Create/Update DTOs
@@ -146,5 +161,49 @@ export interface RecordHistoryDTO {
   userAnswer: string;
   consensusAnswer: string;
   isCorrect: boolean;
+}
+
+// Mastery level categories for display
+export type MasteryLevel = "new" | "learning" | "reviewing" | "mastered";
+
+// Spaced repetition types
+export interface QuestionMastery {
+  questionId: number;
+  easeFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  nextReviewAt: Date | null;
+  lastReviewedAt: Date | null;
+  masteryLevel: MasteryLevel;
+  reviewCount: number;
+}
+
+export interface MasteryStats {
+  totalQuestions: number;
+  newCount: number;
+  learningCount: number;
+  reviewingCount: number;
+  masteredCount: number;
+  averageEaseFactor: number;
+  dueToday: number;
+  overduCount: number;
+}
+
+export interface UpdateMasteryDTO {
+  userId: string;
+  questionId: number;
+  isCorrect: boolean;
+  isCramMode?: boolean;
+  cramDays?: number;
+}
+
+// Practice mode types
+export type PracticeMode = "random" | "smart" | "cram";
+
+export interface PracticeSettings {
+  mode: PracticeMode;
+  questionType: QuestionType | "all";
+  count: number;
+  cramDays?: number; // Days until exam (1-7) for cram mode
 }
 

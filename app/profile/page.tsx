@@ -244,6 +244,7 @@ function ProfilePageContent() {
   const accuracy =
     totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
   const upvoted = 0; // Placeholder - could be fetched from user stats
+  const contributions = 0; // Placeholder - answers submitted
 
   const stats = { totalAnswered, correctAnswers };
 
@@ -306,26 +307,51 @@ function ProfilePageContent() {
 
         {/* My Statistics Section */}
         <div className="px-4">
-          <Card className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-3">
             <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
               My Statistics
             </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Answered" value={totalAnswered.toLocaleString()} />
-              <StatCard label="Correct" value={correctAnswers.toLocaleString()} />
-              <StatCard label="Accuracy" value={`${accuracy}%`} />
-              <StatCard label="Upvoted" value={upvoted.toLocaleString()} />
-            </div>
-            <div className="flex flex-col gap-3 pt-2">
-              <div className="flex gap-6 justify-between">
-                <p className="text-base font-medium leading-normal text-text-primary-light dark:text-text-primary-dark">
-                  Practice Accuracy
-                </p>
-                <p className="text-sm font-normal leading-normal text-text-primary-light dark:text-text-primary-dark">
-                  {accuracy}%
-                </p>
+            <div className="flex justify-between items-center">
+              {/* Streak */}
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1">
+                  <Icon name="local_fire_department" size="sm" className="text-orange-500" />
+                  <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                    {appUser?.stats?.streak ?? 0}
+                  </span>
+                </div>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Streak</span>
               </div>
-              <ProgressBar value={accuracy} variant="primary" size="md" />
+
+              {/* Coverage */}
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                  {masteryStats ? masteryStats.totalQuestions - masteryStats.newCount : 0}/{masteryStats?.totalQuestions ?? 0}
+                </span>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Coverage</span>
+              </div>
+
+              {/* Upvotes */}
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1">
+                  <Icon name="thumb_up" size="sm" className="text-primary" />
+                  <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                    {upvoted}
+                  </span>
+                </div>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Votes</span>
+              </div>
+
+              {/* Contributions */}
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1">
+                  <Icon name="edit_note" size="sm" className="text-green-600 dark:text-green-400" />
+                  <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                    {contributions}
+                  </span>
+                </div>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Contrib.</span>
+              </div>
             </div>
           </Card>
         </div>

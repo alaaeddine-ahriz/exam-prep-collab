@@ -23,17 +23,17 @@ function QuestionDetailsPageContent() {
   const router = useRouter();
   const params = useParams();
   const questionId = Number(params.id);
-  
-  const { 
-    getQuestion, 
-    voteOnMCQ, 
-    voteOnSAQ, 
-    addSAQAnswer, 
+
+  const {
+    getQuestion,
+    voteOnMCQ,
+    voteOnSAQ,
+    addSAQAnswer,
     questions,
     getUserVoteForQuestion,
-    loading 
+    loading
   } = useApp();
-  
+
   const question = getQuestion(questionId);
   const userVote = getUserVoteForQuestion(questionId);
 
@@ -46,7 +46,7 @@ function QuestionDetailsPageContent() {
   const [isVoting, setIsVoting] = useState(false);
   const [isAddingAnswer, setIsAddingAnswer] = useState(false);
   const [isFixingGrammar, setIsFixingGrammar] = useState(false);
-  const [grammarSuggestion, setGrammarSuggestion] = useState<{original: string; fixed: string} | null>(null);
+  const [grammarSuggestion, setGrammarSuggestion] = useState<{ original: string; fixed: string } | null>(null);
 
   // Sync selected answers with user's existing vote
   useEffect(() => {
@@ -89,7 +89,7 @@ function QuestionDetailsPageContent() {
   const nextQuestion = questionIndex < questions.length - 1 ? questions[questionIndex + 1] : null;
 
   const hasVoted = !!userVote;
-  const hasChangedSelection = 
+  const hasChangedSelection =
     (question.type === "mcq" && selectedMCQAnswer && selectedMCQAnswer !== userVote?.optionId) ||
     (question.type === "saq" && selectedSAQAnswer && selectedSAQAnswer !== userVote?.answerId);
 
@@ -109,7 +109,7 @@ function QuestionDetailsPageContent() {
 
   const handleFixGrammar = async () => {
     if (!newAnswerText.trim() || isFixingGrammar) return;
-    
+
     setIsFixingGrammar(true);
     try {
       const result = await fixGrammarAndSpelling(newAnswerText.trim());
@@ -144,7 +144,7 @@ function QuestionDetailsPageContent() {
         // Auto-fix grammar before submitting
         const grammarResult = await fixGrammarAndSpelling(newAnswerText.trim());
         const finalText = grammarResult.wasModified ? grammarResult.fixedText : newAnswerText.trim();
-        
+
         await addSAQAnswer(questionId, finalText);
         setNewAnswerText("");
         setShowAddAnswer(false);
@@ -183,14 +183,14 @@ function QuestionDetailsPageContent() {
         </Card>
 
         {/* Vote Status Banner */}
-        {hasVoted && (
+        {/* {hasVoted && (
           <div className="mb-4 px-3 py-2 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center gap-2">
             <Icon name="check_circle" size="sm" className="text-primary" />
             <span className="text-sm text-primary font-medium">
               You voted • Tap another option to change your vote
             </span>
           </div>
-        )}
+        )} */}
 
         {/* MCQ Options */}
         {question.type === "mcq" && question.options && (
@@ -203,7 +203,7 @@ function QuestionDetailsPageContent() {
                 ? Math.round((option.votes / totalVotes) * 100)
                 : 0;
               const isUserVote = userVote?.optionId === option.id;
-              
+
               return (
                 <AnswerOption
                   key={option.id}
@@ -256,7 +256,7 @@ function QuestionDetailsPageContent() {
                     ? Math.round((answer.votes / totalVotes) * 100)
                     : 0;
                   const isUserVote = userVote?.answerId === answer.id;
-                  
+
                   return (
                     <SAQAnswerCard
                       key={answer.id}
@@ -303,28 +303,28 @@ function QuestionDetailsPageContent() {
         >
           <Icon name="chevron_left" size="md" />
         </button>
-        
+
         {/* Vote Button - shows when selection changed or not yet voted */}
         {((question.type === "mcq" && selectedMCQAnswer && (!hasVoted || hasChangedSelection)) ||
           (question.type === "saq" && selectedSAQAnswer && (!hasVoted || hasChangedSelection))) && (
-          <Button 
-            variant="primary" 
-            onClick={handleVote}
-            disabled={isVoting}
-          >
-            {isVoting ? (
-              <span className="flex items-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                Voting...
-              </span>
-            ) : hasVoted ? (
-              "Change Vote"
-            ) : (
-              "Vote"
-            )}
-          </Button>
-        )}
-        
+            <Button
+              variant="primary"
+              onClick={handleVote}
+              disabled={isVoting}
+            >
+              {isVoting ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                  Voting...
+                </span>
+              ) : hasVoted ? (
+                "Change Vote"
+              ) : (
+                "Vote"
+              )}
+            </Button>
+          )}
+
         <button
           onClick={() => nextQuestion && router.push(`/questions/${nextQuestion.id}`)}
           disabled={!nextQuestion}
@@ -354,7 +354,7 @@ function QuestionDetailsPageContent() {
             }}
             maxLength={1000}
           />
-          
+
           {/* Grammar Fix Button */}
           {newAnswerText.trim().length > 10 && !grammarSuggestion && (
             <button
@@ -366,7 +366,7 @@ function QuestionDetailsPageContent() {
               {isFixingGrammar ? "Checking..." : "Fix Grammar & Spelling"}
             </button>
           )}
-          
+
           {/* Grammar Suggestion */}
           {grammarSuggestion && (
             <div className="mt-3 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">

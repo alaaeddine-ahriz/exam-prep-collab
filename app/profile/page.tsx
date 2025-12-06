@@ -228,6 +228,7 @@ function ProfilePageContent() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showCramSettings, setShowCramSettings] = useState(false);
+  const [showDisableCramConfirm, setShowDisableCramConfirm] = useState(false);
 
   // Edit profile state
   const [editName, setEditName] = useState("");
@@ -348,7 +349,7 @@ function ProfilePageContent() {
               </div>
               {isCramModeActive ? (
                 <button
-                  onClick={() => setExamDate(null)}
+                  onClick={() => setShowDisableCramConfirm(true)}
                   className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
                 >
                   Disable
@@ -652,6 +653,48 @@ function ProfilePageContent() {
               disabled={!selectedExamDate}
             >
               Enable Cram Mode
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Disable Cram Mode Confirmation */}
+      <BottomSheet
+        isOpen={showDisableCramConfirm}
+        onClose={() => setShowDisableCramConfirm(false)}
+        title="Disable Cram Mode?"
+      >
+        <div className="p-4 flex flex-col gap-4">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20">
+            <Icon name="warning" className="text-amber-600 dark:text-amber-400 mt-0.5" />
+            <div>
+              <p className="font-medium text-amber-800 dark:text-amber-200">
+                Are you sure?
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                Disabling cram mode will return to normal spaced repetition intervals. 
+                Your mastery progress will be preserved.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => setShowDisableCramConfirm(false)}
+            >
+              Keep Enabled
+            </Button>
+            <Button 
+              fullWidth 
+              onClick={() => {
+                setExamDate(null);
+                setShowDisableCramConfirm(false);
+              }}
+              className="!bg-amber-600 hover:!bg-amber-700"
+            >
+              Disable
             </Button>
           </div>
         </div>

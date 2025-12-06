@@ -91,45 +91,45 @@ function PracticeModeSetupPageContent() {
         <section>
           <h2 className="text-text-primary-light dark:text-text-primary-dark tracking-tight text-xl font-bold leading-tight pb-3">
             Question Type
-          </h2>
+        </h2>
           <div className="flex flex-col gap-3">
-            <RadioOption
-              id="all"
-              name="question_source"
-              label="All Questions"
+          <RadioOption
+            id="all"
+            name="question_source"
+            label="All Questions"
               description={`Practice from all ${questions.length} questions`}
-              checked={questionSource === "all"}
-              onChange={() => setQuestionSource("all")}
-            />
-            <RadioOption
-              id="mcq"
-              name="question_source"
-              label="Multiple Choice Only"
+            checked={questionSource === "all"}
+            onChange={() => setQuestionSource("all")}
+          />
+          <RadioOption
+            id="mcq"
+            name="question_source"
+            label="Multiple Choice Only"
               description={`${questions.filter(q => q.type === "mcq").length} MCQ questions`}
-              checked={questionSource === "mcq"}
-              onChange={() => setQuestionSource("mcq")}
-            />
-            <RadioOption
-              id="saq"
-              name="question_source"
-              label="Short Answer Only"
+            checked={questionSource === "mcq"}
+            onChange={() => setQuestionSource("mcq")}
+          />
+          <RadioOption
+            id="saq"
+            name="question_source"
+            label="Short Answer Only"
               description={`${questions.filter(q => q.type === "saq").length} SAQ questions`}
-              checked={questionSource === "saq"}
-              onChange={() => setQuestionSource("saq")}
-            />
-          </div>
+            checked={questionSource === "saq"}
+            onChange={() => setQuestionSource("saq")}
+          />
+        </div>
         </section>
 
         {/* Number of Questions Slider */}
         <section>
-          <Slider
-            label="Number of Questions"
-            value={Math.min(numberOfQuestions, maxQuestions)}
-            min={1}
-            max={maxQuestions}
-            step={1}
-            onChange={setNumberOfQuestions}
-          />
+        <Slider
+          label="Number of Questions"
+          value={Math.min(numberOfQuestions, maxQuestions)}
+          min={1}
+          max={maxQuestions}
+          step={1}
+          onChange={setNumberOfQuestions}
+        />
         </section>
       </main>
 

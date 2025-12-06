@@ -10,8 +10,11 @@ import {
   ProtectedRoute,
   BottomSheet,
   Button,
+  MasteryRing,
+  MasteryBadge,
 } from "../components";
 import { useApp } from "../context/AppContext";
+import { MasteryLevel } from "../lib/services/types";
 import { useAuth } from "../context/AuthContext";
 
 // Achievement data
@@ -218,15 +221,19 @@ function MenuItem({
 
 function ProfilePageContent() {
   const router = useRouter();
-  const { user: appUser } = useApp();
+  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode } = useApp();
   const { user: authUser, signOut } = useAuth();
 
   // Bottom sheet states
   const [showAchievements, setShowAchievements] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showCramSettings, setShowCramSettings] = useState(false);
 
   // Edit profile state
   const [editName, setEditName] = useState("");
+  
+  // Cram mode date picker
+  const [selectedExamDate, setSelectedExamDate] = useState<string>("");
 
   // User display info
   const displayName =
@@ -268,7 +275,7 @@ function ProfilePageContent() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
+    <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark">
       {/* Top App Bar */}
       <TopAppBar
         title="Profile"
@@ -325,6 +332,143 @@ function ProfilePageContent() {
             </div>
           </Card>
         </div>
+
+        {/* Cram Mode Section */}
+        <div className="px-4 mt-4">
+          <Card className={`flex flex-col gap-4 ${isCramModeActive ? "bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800" : ""}`}>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Icon 
+                  name="bolt" 
+                  className={isCramModeActive ? "text-violet-600 dark:text-violet-400" : "text-text-secondary-light dark:text-text-secondary-dark"} 
+                />
+                <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
+                  Cram Mode
+                </h3>
+              </div>
+              {isCramModeActive ? (
+                <button
+                  onClick={() => setExamDate(null)}
+                  className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
+                >
+                  Disable
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    // Default to 5 days from now
+                    const defaultDate = new Date();
+                    defaultDate.setDate(defaultDate.getDate() + 5);
+                    setSelectedExamDate(defaultDate.toISOString().split("T")[0]);
+                    setShowCramSettings(true);
+                  }}
+                  className="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
+                >
+                  Enable
+                </button>
+              )}
+            </div>
+            
+            {isCramModeActive && daysUntilExam !== null ? (
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-sm text-violet-700 dark:text-violet-300">
+                    <span className="font-semibold">{daysUntilExam}</span> day{daysUntilExam !== 1 ? "s" : ""} until exam
+                  </p>
+                  <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">
+                    All practice sessions use compressed intervals
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                Enable cram mode to use compressed review intervals for exam prep (1-7 days).
+              </p>
+            )}
+          </Card>
+        </div>
+
+        {/* Mastery Overview Section */}
+        {masteryStats && (
+          <div className="px-4 mt-4">
+            <Card className="flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
+                  Mastery Overview
+                </h3>
+                {masteryStats.dueToday > 0 && (
+                  <button
+                    onClick={() => router.push("/practice/setup")}
+                    className="text-sm font-medium text-primary hover:text-primary-hover transition-colors flex items-center gap-1"
+                  >
+                    <Icon name="schedule" size="sm" />
+                    {masteryStats.dueToday} due
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-6">
+                {/* Mastery Ring */}
+                <div className="relative flex-shrink-0">
+                  <MasteryRing
+                    masteredPercent={masteryStats.totalQuestions > 0 
+                      ? (masteryStats.masteredCount / masteryStats.totalQuestions) * 100 
+                      : 0}
+                    reviewingPercent={masteryStats.totalQuestions > 0 
+                      ? (masteryStats.reviewingCount / masteryStats.totalQuestions) * 100 
+                      : 0}
+                    learningPercent={masteryStats.totalQuestions > 0 
+                      ? (masteryStats.learningCount / masteryStats.totalQuestions) * 100 
+                      : 0}
+                    size={100}
+                    strokeWidth={10}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                      {masteryStats.totalQuestions > 0 
+                        ? Math.round((masteryStats.masteredCount / masteryStats.totalQuestions) * 100)
+                        : 0}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mastery Breakdown */}
+                <div className="flex-1 space-y-2">
+                  {([
+                    { level: "mastered" as MasteryLevel, count: masteryStats.masteredCount, color: "text-green-600 dark:text-green-400" },
+                    { level: "reviewing" as MasteryLevel, count: masteryStats.reviewingCount, color: "text-blue-600 dark:text-blue-400" },
+                    { level: "learning" as MasteryLevel, count: masteryStats.learningCount, color: "text-orange-600 dark:text-orange-400" },
+                    { level: "new" as MasteryLevel, count: masteryStats.newCount, color: "text-slate-600 dark:text-slate-400" },
+                  ]).map(({ level, count, color }) => (
+                    <div key={level} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MasteryBadge level={level} size="sm" showLabel={false} />
+                        <span className="text-sm font-medium capitalize text-text-primary-light dark:text-text-primary-dark">
+                          {level}
+                        </span>
+                      </div>
+                      <span className={`text-sm font-semibold ${color}`}>
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              {masteryStats.dueToday > 0 && (
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={() => router.push("/practice/setup")}
+                >
+                  <Icon name="play_arrow" size="sm" />
+                  Start Practice ({masteryStats.dueToday} due)
+                </Button>
+              )}
+            </Card>
+          </div>
+        )}
 
         {/* Achievements Section */}
         <div className="px-4 mt-4">
@@ -447,6 +591,67 @@ function ProfilePageContent() {
             </Button>
             <Button fullWidth onClick={handleSaveProfile}>
               Save Changes
+            </Button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Cram Mode Settings Bottom Sheet */}
+      <BottomSheet
+        isOpen={showCramSettings}
+        onClose={() => setShowCramSettings(false)}
+        title="Cram Mode Settings"
+      >
+        <div className="p-4 flex flex-col gap-4">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-violet-50 dark:bg-violet-900/20">
+            <Icon name="info" className="text-violet-600 dark:text-violet-400 mt-0.5" />
+            <div>
+              <p className="font-medium text-violet-800 dark:text-violet-200">
+                What is Cram Mode?
+              </p>
+              <p className="text-sm text-violet-700 dark:text-violet-300 mt-1">
+                Cram mode uses compressed review intervals to help you cover all questions before your exam. 
+                It will automatically disable after your exam date.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
+              Exam Date
+            </label>
+            <input
+              type="date"
+              value={selectedExamDate}
+              onChange={(e) => setSelectedExamDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
+              className="w-full px-4 py-3 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+              Select a date within the next 7 days
+            </p>
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => setShowCramSettings(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              fullWidth 
+              onClick={() => {
+                if (selectedExamDate) {
+                  setExamDate(new Date(selectedExamDate));
+                }
+                setShowCramSettings(false);
+              }}
+              disabled={!selectedExamDate}
+            >
+              Enable Cram Mode
             </Button>
           </div>
         </div>

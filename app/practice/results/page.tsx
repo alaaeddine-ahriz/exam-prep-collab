@@ -20,7 +20,7 @@ function PracticeResultsPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background-light dark:bg-background-dark">
+    <div className="flex min-h-dvh flex-col bg-background-light dark:bg-background-dark">
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Score Circle */}
         <div className="relative w-48 h-48 mb-6">

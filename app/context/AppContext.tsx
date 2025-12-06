@@ -1,11 +1,17 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { Question, User, AnswerHistory } from "../lib/services/types";
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
+import { Question, User, AnswerHistory, QuestionMastery, MasteryStats, PracticeMode } from "../lib/services/types";
 import { useAuth } from "./AuthContext";
 
 // User votes by question ID
 type UserVotes = Record<number, { optionId?: string; answerId?: string }>;
+
+// Study mode settings (synced via database)
+interface StudyModeSettings {
+  examDate: string | null; // ISO date string
+  isEnabled: boolean;
+}
 
 interface AppContextType {
   questions: Question[];
@@ -14,6 +20,16 @@ interface AppContextType {
   loading: boolean;
   error: string | null;
   currentUserName: string;
+  
+  // Mastery state
+  mastery: QuestionMastery[];
+  masteryStats: MasteryStats | null;
+  
+  // Study mode (global cram mode)
+  studyMode: StudyModeSettings;
+  isCramModeActive: boolean;
+  daysUntilExam: number | null;
+  setExamDate: (date: Date | null) => void;
   
   // Question operations
   refreshQuestions: () => Promise<void>;
@@ -27,15 +43,34 @@ interface AppContextType {
   // User operations
   refreshUser: () => Promise<void>;
   addToHistory: (entry: Omit<AnswerHistory, "id">) => Promise<void>;
+  
+  // Mastery operations
+  refreshMastery: (force?: boolean) => Promise<void>;
+  getMasteryForQuestion: (questionId: number) => QuestionMastery | null;
+  getPracticeQuestions: (questionType: "all" | "mcq" | "saq", count: number) => Promise<number[]>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Helper to calculate days until exam
+const calculateDaysUntilExam = (examDateStr: string | null): number | null => {
+  if (!examDateStr) return null;
+  const examDate = new Date(examDateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  examDate.setHours(0, 0, 0, 0);
+  const diffTime = examDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user: authUser } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [userVotes, setUserVotes] = useState<UserVotes>({});
+  const [mastery, setMastery] = useState<QuestionMastery[]>([]);
+  const [masteryStats, setMasteryStats] = useState<MasteryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -43,6 +78,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pendingVotes, setPendingVotes] = useState<Set<number>>(new Set());
   const [pendingAnswers, setPendingAnswers] = useState<Set<number>>(new Set());
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  
+  // Ref to track if mastery was already loaded (to prevent re-fetches during quiz)
+  const masteryLoadedRef = useRef(false);
+
+  // Study mode derived from user data (synced via database)
+  const studyMode: StudyModeSettings = {
+    examDate: user?.examDate || null,
+    isEnabled: user?.examDate !== null && user?.examDate !== undefined,
+  };
+  
+  // Calculate derived study mode values
+  const daysUntilExam = calculateDaysUntilExam(studyMode.examDate);
+  const isCramModeActive = studyMode.isEnabled && daysUntilExam !== null && daysUntilExam >= 0 && daysUntilExam <= 7;
 
   // Get the current user ID from auth, or use a local ID for unauthenticated users
   const getCurrentUserId = useCallback(() => {
@@ -118,6 +166,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [getCurrentUserId]);
 
+  // Fetch mastery data
+  const refreshMastery = useCallback(async (force: boolean = false) => {
+    // Skip if already loaded and not forcing
+    if (masteryLoadedRef.current && !force) return;
+    
+    const userId = getCurrentUserId();
+    try {
+      // Fetch individual mastery records
+      const response = await fetch(`/api/users/${userId}/mastery`);
+      if (!response.ok) throw new Error("Failed to fetch mastery");
+      const data = await response.json();
+      
+      // Convert date strings to Date objects
+      const masteryWithDates = (data || []).map((m: QuestionMastery) => ({
+        ...m,
+        nextReviewAt: m.nextReviewAt ? new Date(m.nextReviewAt) : null,
+        lastReviewedAt: m.lastReviewedAt ? new Date(m.lastReviewedAt) : null,
+      }));
+      setMastery(masteryWithDates);
+      masteryLoadedRef.current = true;
+
+      // Fetch aggregate stats
+      const statsResponse = await fetch(
+        `/api/users/${userId}/mastery?stats=true&totalQuestions=${questions.length}`
+      );
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setMasteryStats(statsData);
+      }
+    } catch (err) {
+      console.error("Error fetching mastery:", err);
+    }
+  }, [getCurrentUserId, questions.length]);
+
   // Initial load and reload when auth user changes
   useEffect(() => {
     const loadData = async () => {
@@ -127,6 +209,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     loadData();
   }, [refreshQuestions, refreshUser, refreshUserVotes, authUser?.id]);
+
+  // Load mastery after questions are loaded
+  useEffect(() => {
+    if (questions.length > 0) {
+      refreshMastery();
+    }
+  }, [questions.length, refreshMastery]);
+
+  // Auto-disable cram mode if exam date has passed
+  useEffect(() => {
+    if (studyMode.isEnabled && daysUntilExam !== null && daysUntilExam < 0) {
+      // Exam date passed, disable cram mode
+      const userId = getCurrentUserId();
+      fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exam_date: null }),
+      }).then(() => refreshUser()).catch(console.error);
+    }
+  }, [studyMode.isEnabled, daysUntilExam, getCurrentUserId, refreshUser]);
+
+  // Set exam date function (saves to database)
+  const setExamDate = useCallback(async (date: Date | null) => {
+    const userId = getCurrentUserId();
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exam_date: date ? date.toISOString() : null }),
+      });
+      if (!response.ok) throw new Error("Failed to update exam date");
+      await refreshUser(); // Refresh user to get updated exam_date
+    } catch (err) {
+      console.error("Error setting exam date:", err);
+    }
+  }, [getCurrentUserId, refreshUser]);
 
   // Add question
   const addQuestion = async (questionData: { 
@@ -271,19 +389,85 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return userVotes[questionId] || null;
   };
 
-  // Add to history
+  // Add to history and update mastery
   const addToHistory = async (entry: Omit<AnswerHistory, "id">) => {
     const userId = getCurrentUserId();
     try {
+      // Record history
       const response = await fetch(`/api/users/${userId}/history`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
       });
       if (!response.ok) throw new Error("Failed to record history");
-      await refreshUser();
+
+      // Update mastery (spaced repetition) - use global cram mode setting
+      const masteryResponse = await fetch(`/api/users/${userId}/mastery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: entry.questionId,
+          isCorrect: entry.isCorrect,
+          isCramMode: isCramModeActive,
+          cramDays: daysUntilExam,
+        }),
+      });
+      if (!masteryResponse.ok) {
+        console.error("Failed to update mastery");
+      }
+
+      // Don't refresh during quiz - will refresh when leaving quiz page
+      // This prevents re-renders during practice
     } catch (err) {
       console.error("Error recording history:", err);
+    }
+  };
+
+  // Get mastery for a specific question
+  const getMasteryForQuestion = (questionId: number): QuestionMastery | null => {
+    return mastery.find((m) => m.questionId === questionId) || null;
+  };
+
+  // Get practice questions based on global study mode
+  const getPracticeQuestions = async (
+    questionType: "all" | "mcq" | "saq",
+    count: number
+  ): Promise<number[]> => {
+    const userId = getCurrentUserId();
+    
+    // Filter questions by type
+    const filteredQuestions = questions.filter(
+      (q) => questionType === "all" || q.type === questionType
+    );
+    const questionIds = filteredQuestions.map((q) => q.id);
+
+    // Determine mode based on global settings
+    const mode: PracticeMode = isCramModeActive ? "cram" : "smart";
+
+    try {
+      const response = await fetch("/api/practice/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          mode,
+          questionIds,
+          count,
+          cramDays: daysUntilExam ?? 7,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get practice questions");
+      }
+
+      const data = await response.json();
+      return data.questionIds;
+    } catch (err) {
+      console.error("Error getting practice questions:", err);
+      // Fallback to random
+      const shuffled = [...questionIds].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
     }
   };
 
@@ -291,9 +475,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     questions,
     user,
     userVotes,
+    mastery,
+    masteryStats,
     loading,
     error,
     currentUserName: getCurrentUserName(),
+    // Study mode
+    studyMode,
+    isCramModeActive,
+    daysUntilExam,
+    setExamDate,
+    // Operations
     refreshQuestions,
     addQuestion,
     voteOnMCQ,
@@ -303,6 +495,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getUserVoteForQuestion,
     refreshUser,
     addToHistory,
+    refreshMastery,
+    getMasteryForQuestion,
+    getPracticeQuestions,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

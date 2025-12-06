@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Icon,
@@ -20,20 +20,72 @@ import { verifyAnswer as verifyAnswerAI, AnswerVerificationResponse } from "../.
 function PracticeQuizPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { questions, addToHistory } = useApp();
+  const { questions, addToHistory, getPracticeQuestions, isCramModeActive, refreshMastery } = useApp();
 
   const source = searchParams.get("source") || "all";
   const count = Number(searchParams.get("count")) || 10;
 
-  // Filter and shuffle questions
+  // Ref to prevent re-fetching questions during the session
+  const questionsLoadedRef = useRef(false);
+  const questionsRef = useRef<Question[]>([]);
+
+  // State for question selection
+  const [practiceQuestionIds, setPracticeQuestionIds] = useState<number[] | null>(null);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
+
+  // Fetch questions once on mount (or when questions become available)
+  useEffect(() => {
+    // Skip if already loaded
+    if (questionsLoadedRef.current) return;
+    
+    // Wait for questions to load
+    if (questions.length === 0) return;
+
+    const fetchQuestions = async () => {
+      setIsLoadingQuestions(true);
+      try {
+        const ids = await getPracticeQuestions(
+          source as "all" | "mcq" | "saq",
+          count
+        );
+        setPracticeQuestionIds(ids);
+        questionsLoadedRef.current = true;
+        // Store a snapshot of questions to prevent re-renders
+        questionsRef.current = questions;
+      } catch (error) {
+        console.error("Error fetching practice questions:", error);
+        // Fallback to random
+        const filtered = questions.filter((q) => 
+          source === "all" || q.type === source
+        );
+        const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+        setPracticeQuestionIds(shuffled.slice(0, count).map(q => q.id));
+        questionsLoadedRef.current = true;
+        questionsRef.current = questions;
+      } finally {
+        setIsLoadingQuestions(false);
+      }
+    };
+    
+    fetchQuestions();
+  }, [questions.length, source, count, getPracticeQuestions]);
+
+  // Refresh mastery when leaving the quiz
+  useEffect(() => {
+    return () => {
+      // Refresh mastery data when leaving quiz
+      refreshMastery(true);
+    };
+  }, [refreshMastery]);
+
+  // Get practice questions from IDs - use snapshot to prevent re-renders
   const practiceQuestions = useMemo(() => {
-    let filtered = questions.filter((q) => 
-      source === "all" || q.type === source
-    );
-    // Shuffle
-    filtered = [...filtered].sort(() => Math.random() - 0.5);
-    return filtered.slice(0, count);
-  }, [questions, source, count]);
+    if (!practiceQuestionIds) return [];
+    const questionSource = questionsRef.current.length > 0 ? questionsRef.current : questions;
+    return practiceQuestionIds
+      .map(id => questionSource.find(q => q.id === id))
+      .filter((q): q is Question => q !== undefined);
+  }, [practiceQuestionIds, questions]);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedMCQAnswer, setSelectedMCQAnswer] = useState<string | null>(null);
@@ -46,9 +98,21 @@ function PracticeQuizPageContent() {
   const currentQuestion = practiceQuestions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / practiceQuestions.length) * 100;
 
+  // Loading state
+  if (isLoadingQuestions) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+        <p className="text-text-secondary-light dark:text-text-secondary-dark text-center">
+          {isCramModeActive ? "Preparing cram session..." : "Selecting questions for review..."}
+        </p>
+      </div>
+    );
+  }
+
   if (practiceQuestions.length === 0) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background-light dark:bg-background-dark p-4">
         <Icon name="quiz" size="xl" className="text-text-secondary-light dark:text-text-secondary-dark mb-4" />
         <p className="text-text-secondary-light dark:text-text-secondary-dark text-center mb-4">
           No questions available for this practice mode.
@@ -177,7 +241,7 @@ function PracticeQuizPageContent() {
     : saqAnswer.trim().length > 0;
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark">
+    <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark">
       {/* Top App Bar */}
       <div className="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
         <div className="flex w-12 items-center justify-start">
@@ -189,7 +253,7 @@ function PracticeQuizPageContent() {
           </button>
         </div>
         <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">
-          Practice Mode
+          {isCramModeActive ? "Cram Mode" : "Smart Review"}
         </h2>
         <div className="flex w-12 items-center justify-end">
           <QuestionTypeBadge type={currentQuestion.type} />

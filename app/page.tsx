@@ -14,7 +14,7 @@ export default function Home() {
   // Show loading state
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background-light dark:bg-background-dark">
+      <div className="flex min-h-dvh items-center justify-center bg-background-light dark:bg-background-dark">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
       </div>
     );
@@ -23,7 +23,7 @@ export default function Home() {
   // Authenticated users home screen
   if (isAuthenticated) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
+      <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
         <div className="flex flex-col items-center w-full max-w-sm">
           <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg mb-2">
             {user?.email?.charAt(0).toUpperCase() || "U"}
@@ -53,7 +53,7 @@ export default function Home() {
 
   // Default: Show welcome screen for non-authenticated users
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark justify-center">
+    <div className="flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark justify-center">
       {/* Content */}
       <div className="flex flex-col flex-1 px-6 py-12 max-w-md mx-auto w-full">
         <div className="flex-1 flex flex-col justify-center">

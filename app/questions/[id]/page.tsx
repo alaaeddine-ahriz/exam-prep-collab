@@ -62,7 +62,7 @@ function QuestionDetailsPageContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background-light dark:bg-background-dark">
+      <div className="flex min-h-dvh items-center justify-center bg-background-light dark:bg-background-dark">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
           <p className="text-text-secondary-light dark:text-text-secondary-dark">
@@ -75,7 +75,7 @@ function QuestionDetailsPageContent() {
 
   if (!question) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background-light dark:bg-background-dark">
+      <div className="flex min-h-dvh items-center justify-center bg-background-light dark:bg-background-dark">
         <p className="text-text-secondary-light dark:text-text-secondary-dark">
           Question not found
         </p>
@@ -162,7 +162,7 @@ function QuestionDetailsPageContent() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
+    <div className="relative flex min-h-dvh w-full flex-col bg-background-light dark:bg-background-dark">
       {/* Top App Bar */}
       <TopAppBar
         title={`Question #${questionId}`}

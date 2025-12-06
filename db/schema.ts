@@ -148,6 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_history_question ON user_history(question_id);
 CREATE INDEX IF NOT EXISTS idx_mastery_user ON question_mastery(user_id);
 CREATE INDEX IF NOT EXISTS idx_mastery_question ON question_mastery(question_id);
 CREATE INDEX IF NOT EXISTS idx_mastery_next_review ON question_mastery(next_review_at);
+CREATE INDEX IF NOT EXISTS idx_mastery_user_next_review ON question_mastery(user_id, next_review_at);
 `;
 
 /**

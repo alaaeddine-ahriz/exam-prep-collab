@@ -58,7 +58,7 @@ export function BottomSheet({ isOpen, onClose, title, children, allowOverflow = 
         </div>
 
         {/* Content */}
-        <div className={`flex flex-col max-h-[70dvh] ${allowOverflow ? 'overflow-visible' : 'overflow-y-auto'}`}>
+        <div className={`flex flex-col max-h-[70dvh] overflow-x-hidden ${allowOverflow ? 'overflow-y-visible' : 'overflow-y-auto'}`}>
           {children}
         </div>
       </div>

@@ -773,7 +773,7 @@ function ProfilePageContent() {
               onChange={(e) => setSelectedExamDate(e.target.value)}
               min={new Date().toISOString().split("T")[0]}
               max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
-              className="w-full px-4 py-3 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full max-w-full box-border px-4 py-3 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
               Select a date within the next 7 days

@@ -19,6 +19,9 @@ export function DailyBonusModal() {
         setIsOpen(true);
       }, 1000);
       return () => clearTimeout(timer);
+    } else if (currencyInfo && !currencyInfo.canClaimDailyBonus && !claimResult) {
+      // Close modal if bonus is no longer available (already claimed)
+      setIsOpen(false);
     }
   }, [currencyInfo?.canClaimDailyBonus, claimResult]);
 
@@ -33,6 +36,9 @@ export function DailyBonusModal() {
       setTimeout(() => {
         setIsOpen(false);
       }, 2000);
+    } else {
+      // Already claimed - close the modal
+      setIsOpen(false);
     }
   };
 

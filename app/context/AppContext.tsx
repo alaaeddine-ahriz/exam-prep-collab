@@ -89,7 +89,7 @@ const calculateDaysUntilExam = (examDateStr: string | null): number | null => {
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { user: authUser } = useAuth();
+  const { user: authUser, loading: authLoading } = useAuth();
   const { showTokenToast } = useTokenToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -157,7 +157,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     const userId = getCurrentUserId();
     try {
-      const response = await fetch(`/api/users/${userId}`);
+      // Pass the user's email as a header so the API can use it for user creation
+      const headers: HeadersInit = {};
+      if (authUser?.email) {
+        headers["x-user-email"] = authUser.email;
+      }
+      
+      const response = await fetch(`/api/users/${userId}`, { headers });
       if (!response.ok) throw new Error("Failed to fetch user");
       const data = await response.json();
       // Convert date strings to Date objects
@@ -177,7 +183,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Error fetching user:", err);
       setError("Failed to load user");
     }
-  }, [getCurrentUserId]);
+  }, [getCurrentUserId, authUser?.email]);
 
   // Fetch user votes
   const refreshUserVotes = useCallback(async () => {
@@ -208,6 +214,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Claim daily bonus
   const claimDailyBonus = useCallback(async (): Promise<{ success: boolean; amount?: number }> => {
     const userId = getCurrentUserId();
+    
+    // Optimistically update UI to hide the claim button immediately
+    setCurrencyInfo(prev => prev ? { ...prev, canClaimDailyBonus: false } : prev);
+    
     try {
       const response = await fetch(`/api/users/${userId}/balance/claim-daily`, {
         method: "POST",
@@ -215,14 +225,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       if (!response.ok) {
         if (response.status === 409) {
-          // Already claimed
+          // Already claimed - refresh to get correct state
+          await refreshCurrency();
           return { success: false };
         }
+        // Revert optimistic update on error
+        setCurrencyInfo(prev => prev ? { ...prev, canClaimDailyBonus: true } : prev);
         throw new Error("Failed to claim bonus");
       }
       
       const data = await response.json();
-      await refreshCurrency();
+      
+      // Update balance with the new value from the response
+      setCurrencyInfo(prev => prev ? { 
+        ...prev, 
+        balance: data.newBalance,
+        canClaimDailyBonus: false 
+      } : prev);
       
       // Show toast for daily bonus
       if (data.amount) {
@@ -272,13 +291,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Initial load and reload when auth user changes
   useEffect(() => {
+    // Don't fetch user-specific data until auth is ready
+    if (authLoading) return;
+    
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([refreshQuestions(), refreshUser(), refreshUserVotes(), refreshCurrency()]);
+      // Always fetch questions (not user-specific)
+      await refreshQuestions();
+      
+      // Only fetch user-specific data if authenticated
+      if (authUser?.id) {
+        await Promise.all([refreshUser(), refreshUserVotes(), refreshCurrency()]);
+      } else {
+        // Reset user-specific state when not authenticated
+        setUser(null);
+        setUserVotes({});
+        setCurrencyInfo(null);
+      }
       setLoading(false);
     };
     loadData();
-  }, [refreshQuestions, refreshUser, refreshUserVotes, refreshCurrency, authUser?.id]);
+  }, [refreshQuestions, refreshUser, refreshUserVotes, refreshCurrency, authUser?.id, authLoading]);
 
   // Load mastery after questions are loaded
   useEffect(() => {
@@ -372,13 +405,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       const data = await response.json();
       
-      // Show toast if tokens were awarded (first vote on this question)
+      // Show toast and update balance if tokens were awarded (first vote on this question)
       if (data.tokensAwarded !== undefined && currencyInfo) {
         const reward = currencyInfo.config.voteReward;
         showTokenToast(reward, "Voted on answer");
+        // Update balance immediately from response
+        setCurrencyInfo(prev => prev ? { ...prev, balance: data.tokensAwarded } : prev);
       }
       
-      await Promise.all([refreshQuestions(), refreshCurrency()]);
+      await refreshQuestions();
     } catch (err) {
       console.error("Error voting:", err);
       // Revert on error
@@ -418,13 +453,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       const data = await response.json();
       
-      // Show toast if tokens were awarded (first vote on this question)
+      // Show toast and update balance if tokens were awarded (first vote on this question)
       if (data.tokensAwarded !== undefined && currencyInfo) {
         const reward = currencyInfo.config.voteReward;
         showTokenToast(reward, "Voted on answer");
+        // Update balance immediately from response
+        setCurrencyInfo(prev => prev ? { ...prev, balance: data.tokensAwarded } : prev);
       }
       
-      await Promise.all([refreshQuestions(), refreshCurrency()]);
+      await refreshQuestions();
     } catch (err) {
       console.error("Error voting:", err);
       // Revert on error
@@ -456,13 +493,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       const data = await response.json();
       
-      // Show toast if tokens were awarded
+      // Show toast and update balance if tokens were awarded
       if (data.tokensAwarded !== undefined && currencyInfo) {
         const reward = currencyInfo.config.answerReward;
         showTokenToast(reward, "Submitted answer");
+        // Update balance immediately from response
+        setCurrencyInfo(prev => prev ? { ...prev, balance: data.tokensAwarded } : prev);
       }
       
-      await Promise.all([refreshQuestions(), refreshCurrency()]);
+      await refreshQuestions();
     } catch (err) {
       console.error("Error adding answer:", err);
       setError("Failed to add answer");

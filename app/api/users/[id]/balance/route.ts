@@ -6,6 +6,7 @@ import {
   getCurrencyConfig,
 } from "@/app/lib/services/currencyService";
 import { TransactionType } from "@/app/lib/services/types";
+import { env } from "@/app/lib/config/env";
 
 /**
  * GET /api/users/[id]/balance
@@ -17,6 +18,27 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    
+    // Don't create records for "local-user" in production with Supabase
+    if (id === "local-user" && env.dataProvider === "supabase") {
+      const config = getCurrencyConfig();
+      return NextResponse.json({
+        balance: 0,
+        canClaimDailyBonus: false,
+        practiceSessionsUsedToday: 0,
+        freeSessionsRemaining: config.limits.freePracticeSessionsPerDay,
+        requiresPaymentForPractice: false,
+        config: {
+          currencyName: config.currency.name,
+          practiceSessionCost: config.costs.practiceSession,
+          aiVerificationCost: config.costs.aiVerification,
+          dailyLoginReward: config.rewards.dailyLogin,
+          voteReward: config.rewards.castVote,
+          answerReward: config.rewards.submitAnswer,
+          freePracticeSessionsPerDay: config.limits.freePracticeSessionsPerDay,
+        },
+      });
+    }
     
     const [balance, practiceInfo] = await Promise.all([
       getBalance(id),

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataService } from "@/app/lib/services";
+import { env } from "@/app/lib/config/env";
 
 export async function GET(
   request: NextRequest,
@@ -7,24 +8,52 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    
+    // Don't create records for "local-user" in production with Supabase
+    if (id === "local-user" && env.dataProvider === "supabase") {
+      return NextResponse.json({
+        id: "local-user",
+        name: "Guest",
+        email: "guest@local",
+        stats: {
+          totalAnswered: 0,
+          correctAnswers: 0,
+          mcqAnswered: 0,
+          mcqCorrect: 0,
+          saqAnswered: 0,
+          saqCorrect: 0,
+          streak: 0,
+          lastActive: new Date(),
+        },
+        history: [],
+        joinedAt: new Date(),
+        examDate: null,
+      });
+    }
+    
     const service = await getDataService();
+    
+    // Get user's email from the request header if available (set by auth middleware)
+    const userEmail = request.headers.get("x-user-email");
     
     let user = await service.users.getUserById(id);
 
     // If user doesn't exist, create them with default values
     // The name will be updated when they take actions
     if (!user) {
-      // Extract a display name from the ID (could be an email or UUID)
-      const displayName = id.includes("@") 
-        ? id.split("@")[0] 
-        : id === "local-user" 
-          ? "Guest" 
-          : "User";
+      // Extract a display name from the ID or email
+      const displayName = userEmail 
+        ? userEmail.split("@")[0]
+        : id.includes("@") 
+          ? id.split("@")[0] 
+          : id === "local-user" 
+            ? "Guest" 
+            : "User";
       
       user = await service.users.createUser({
         id,
         name: displayName,
-        email: id.includes("@") ? id : `${id}@local`,
+        email: userEmail || (id.includes("@") ? id : `${id}@local`),
       });
     }
 

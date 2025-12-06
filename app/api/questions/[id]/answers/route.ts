@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataService } from "@/app/lib/services";
+import { awardAnswerTokens } from "@/app/lib/services/currencyService";
 
 export async function POST(
   request: NextRequest,
@@ -11,7 +12,7 @@ export async function POST(
     const body = await request.json();
 
     const questionId = parseInt(id);
-    const { text, createdBy } = body;
+    const { text, createdBy, userId } = body;
 
     const question = await service.questions.addSAQAnswer({
       questionId,
@@ -19,7 +20,22 @@ export async function POST(
       createdBy,
     });
 
-    return NextResponse.json(question, { status: 201 });
+    // Award tokens for submitting an answer (use userId for currency, createdBy is just display name)
+    let tokensAwarded: number | undefined;
+    if (userId) {
+      try {
+        const balance = await awardAnswerTokens(userId);
+        tokensAwarded = balance.balance;
+      } catch (tokenError) {
+        // Log but don't fail the answer submission if token award fails
+        console.error("Failed to award answer tokens:", tokenError);
+      }
+    }
+
+    return NextResponse.json(
+      { ...question, tokensAwarded },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error adding answer:", error);
     return NextResponse.json({ error: "Failed to add answer" }, { status: 500 });

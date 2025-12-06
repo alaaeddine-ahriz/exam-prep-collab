@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataService } from "@/app/lib/services";
+import { awardVoteTokens } from "@/app/lib/services/currencyService";
 
 // GET - Get user's vote on this question
 export async function GET(
@@ -39,6 +40,9 @@ export async function POST(
     const questionId = parseInt(id);
     const { type, optionId, answerId, userId } = body;
 
+    // Check if user has already voted (only award tokens for new votes)
+    const hasVoted = await service.questions.hasUserVoted(userId, questionId);
+
     // Use changeVote which handles both new votes and vote changes
     if (type === "mcq") {
       await service.questions.changeVote(userId, questionId, optionId, undefined);
@@ -46,9 +50,24 @@ export async function POST(
       await service.questions.changeVote(userId, questionId, undefined, answerId);
     }
 
+    // Award tokens only for new votes (not vote changes)
+    let tokensAwarded = 0;
+    if (!hasVoted) {
+      try {
+        const balance = await awardVoteTokens(userId);
+        tokensAwarded = balance.balance;
+      } catch (tokenError) {
+        // Log but don't fail the vote if token award fails
+        console.error("Failed to award vote tokens:", tokenError);
+      }
+    }
+
     // Return updated question
     const question = await service.questions.getQuestionById(questionId);
-    return NextResponse.json(question);
+    return NextResponse.json({
+      ...question,
+      tokensAwarded: !hasVoted ? tokensAwarded : undefined,
+    });
   } catch (error) {
     console.error("Error voting:", error);
     return NextResponse.json({ error: "Failed to vote" }, { status: 500 });

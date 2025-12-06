@@ -5,7 +5,7 @@
  * It serves as the source of truth for both SQLite and Supabase implementations.
  */
 
-export const SCHEMA_VERSION = "003";
+export const SCHEMA_VERSION = "004";
 
 /**
  * Table: users
@@ -122,6 +122,49 @@ CREATE TABLE IF NOT EXISTS question_mastery (
 `;
 
 /**
+ * Table: user_balance
+ * Tracks each user's current token balance
+ */
+export const USER_BALANCE_TABLE = `
+CREATE TABLE IF NOT EXISTS user_balance (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  balance INTEGER NOT NULL DEFAULT 0,
+  last_daily_bonus_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`;
+
+/**
+ * Table: currency_transactions
+ * Audit log of all token changes
+ */
+export const CURRENCY_TRANSACTIONS_TABLE = `
+CREATE TABLE IF NOT EXISTS currency_transactions (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount INTEGER NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('vote', 'answer', 'daily_login', 'practice', 'ai_verify', 'initial_balance')),
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`;
+
+/**
+ * Table: daily_practice_sessions
+ * Tracks practice sessions per user per day for free session limits
+ */
+export const DAILY_PRACTICE_SESSIONS_TABLE = `
+CREATE TABLE IF NOT EXISTS daily_practice_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  session_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  session_count INTEGER NOT NULL DEFAULT 1,
+  UNIQUE(user_id, session_date)
+);
+`;
+
+/**
  * All tables in creation order (respecting foreign key dependencies)
  */
 export const ALL_TABLES = [
@@ -132,6 +175,9 @@ export const ALL_TABLES = [
   { name: "votes", sql: VOTES_TABLE },
   { name: "user_history", sql: USER_HISTORY_TABLE },
   { name: "question_mastery", sql: QUESTION_MASTERY_TABLE },
+  { name: "user_balance", sql: USER_BALANCE_TABLE },
+  { name: "currency_transactions", sql: CURRENCY_TRANSACTIONS_TABLE },
+  { name: "daily_practice_sessions", sql: DAILY_PRACTICE_SESSIONS_TABLE },
 ];
 
 /**
@@ -148,6 +194,11 @@ CREATE INDEX IF NOT EXISTS idx_history_question ON user_history(question_id);
 CREATE INDEX IF NOT EXISTS idx_mastery_user ON question_mastery(user_id);
 CREATE INDEX IF NOT EXISTS idx_mastery_question ON question_mastery(question_id);
 CREATE INDEX IF NOT EXISTS idx_mastery_next_review ON question_mastery(next_review_at);
+CREATE INDEX IF NOT EXISTS idx_mastery_user_next_review ON question_mastery(user_id, next_review_at);
+CREATE INDEX IF NOT EXISTS idx_currency_transactions_user ON currency_transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_currency_transactions_type ON currency_transactions(type);
+CREATE INDEX IF NOT EXISTS idx_currency_transactions_created ON currency_transactions(created_at);
+CREATE INDEX IF NOT EXISTS idx_daily_practice_sessions_user_date ON daily_practice_sessions(user_id, session_date);
 `;
 
 /**
@@ -214,6 +265,27 @@ export interface SchemaTypes {
     last_reviewed_at: string | null;
     quality_sum: number;
     review_count: number;
+  };
+  user_balance: {
+    user_id: string;
+    balance: number;
+    last_daily_bonus_at: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  currency_transactions: {
+    id: number;
+    user_id: string;
+    amount: number;
+    type: "vote" | "answer" | "daily_login" | "practice" | "ai_verify" | "initial_balance";
+    description: string | null;
+    created_at: string;
+  };
+  daily_practice_sessions: {
+    id: number;
+    user_id: string;
+    session_date: string;
+    session_count: number;
   };
 }
 

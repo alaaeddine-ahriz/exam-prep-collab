@@ -12,6 +12,7 @@ import {
   Button,
   MasteryRing,
   MasteryBadge,
+  TokenBalance,
 } from "../components";
 import { useApp } from "../context/AppContext";
 import { MasteryLevel } from "../lib/services/types";
@@ -102,28 +103,25 @@ function AchievementBadge({
   if (showDescription) {
     return (
       <div
-        className={`flex items-center gap-4 p-4 rounded-xl border ${
-          unlocked
-            ? "border-primary/30 bg-primary/5"
-            : "border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark"
-        }`}
+        className={`flex items-center gap-4 p-4 rounded-xl border ${unlocked
+          ? "border-primary/30 bg-primary/5"
+          : "border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark"
+          }`}
       >
         <div
-          className={`flex items-center justify-center w-14 h-14 rounded-full flex-shrink-0 ${
-            unlocked
-              ? "bg-primary/20 text-primary"
-              : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
-          }`}
+          className={`flex items-center justify-center w-14 h-14 rounded-full flex-shrink-0 ${unlocked
+            ? "bg-primary/20 text-primary"
+            : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
+            }`}
         >
-          <Icon name={unlocked ? icon : "lock"} size="lg" />
+          <Icon name={unlocked ? icon : "lock"} size="xl" />
         </div>
         <div className="flex-1 min-w-0">
           <p
-            className={`font-bold ${
-              unlocked
-                ? "text-text-primary-light dark:text-text-primary-dark"
-                : "text-text-secondary-light dark:text-text-secondary-dark"
-            }`}
+            className={`font-bold ${unlocked
+              ? "text-text-primary-light dark:text-text-primary-dark"
+              : "text-text-secondary-light dark:text-text-secondary-dark"
+              }`}
           >
             {label}
           </p>
@@ -141,13 +139,12 @@ function AchievementBadge({
   return (
     <div className="flex flex-col items-center gap-2 flex-shrink-0 w-20">
       <div
-        className={`flex items-center justify-center w-16 h-16 rounded-full ${
-          unlocked
-            ? "bg-primary/20 text-primary"
-            : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
-        }`}
+        className={`flex items-center justify-center w-16 h-16 rounded-full ${unlocked
+          ? "bg-primary/20 text-primary"
+          : "bg-border-light dark:bg-border-dark text-text-secondary-light dark:text-text-secondary-dark"
+          }`}
       >
-        <Icon name={unlocked ? icon : "lock"} size="xl" />
+        <Icon name={unlocked ? icon : "lock"} size="2xl" />
       </div>
       <p className="text-xs text-center font-medium text-text-secondary-light dark:text-text-secondary-dark">
         {label}
@@ -183,11 +180,10 @@ function MenuItem({
         }
       />
       <span
-        className={`flex-1 text-base font-medium ${
-          isDanger
-            ? "text-error"
-            : "text-text-primary-light dark:text-text-primary-dark"
-        }`}
+        className={`flex-1 text-base font-medium ${isDanger
+          ? "text-error"
+          : "text-text-primary-light dark:text-text-primary-dark"
+          }`}
       >
         {label}
       </span>
@@ -200,9 +196,8 @@ function MenuItem({
     </>
   );
 
-  const className = `flex items-center p-4 gap-4 w-full text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${
-    isDanger ? "text-error" : ""
-  }`;
+  const className = `flex items-center p-4 gap-4 w-full text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${isDanger ? "text-error" : ""
+    }`;
 
   if (href) {
     return (
@@ -221,7 +216,7 @@ function MenuItem({
 
 function ProfilePageContent() {
   const router = useRouter();
-  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode } = useApp();
+  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode, currencyInfo, claimDailyBonus } = useApp();
   const { user: authUser, signOut } = useAuth();
 
   // Bottom sheet states
@@ -229,10 +224,11 @@ function ProfilePageContent() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showCramSettings, setShowCramSettings] = useState(false);
   const [showDisableCramConfirm, setShowDisableCramConfirm] = useState(false);
+  const [showTokenDetails, setShowTokenDetails] = useState(false);
 
   // Edit profile state
   const [editName, setEditName] = useState("");
-  
+
   // Cram mode date picker
   const [selectedExamDate, setSelectedExamDate] = useState<string>("");
 
@@ -248,6 +244,7 @@ function ProfilePageContent() {
   const accuracy =
     totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
   const upvoted = 0; // Placeholder - could be fetched from user stats
+  const contributions = 0; // Placeholder - answers submitted
 
   const stats = { totalAnswered, correctAnswers };
 
@@ -310,38 +307,101 @@ function ProfilePageContent() {
 
         {/* My Statistics Section */}
         <div className="px-4">
-          <Card className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-3">
             <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
               My Statistics
             </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Answered" value={totalAnswered.toLocaleString()} />
-              <StatCard label="Correct" value={correctAnswers.toLocaleString()} />
-              <StatCard label="Accuracy" value={`${accuracy}%`} />
-              <StatCard label="Upvoted" value={upvoted.toLocaleString()} />
-            </div>
-            <div className="flex flex-col gap-3 pt-2">
-              <div className="flex gap-6 justify-between">
-                <p className="text-base font-medium leading-normal text-text-primary-light dark:text-text-primary-dark">
-                  Practice Accuracy
-                </p>
-                <p className="text-sm font-normal leading-normal text-text-primary-light dark:text-text-primary-dark">
-                  {accuracy}%
-                </p>
+            <div className="flex justify-between items-center">
+              {/* Streak */}
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1">
+                  <Icon name="local_fire_department" size="sm" className="text-orange-500" />
+                  <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                    {appUser?.stats?.streak ?? 0}
+                  </span>
+                </div>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Streak</span>
               </div>
-              <ProgressBar value={accuracy} variant="primary" size="md" />
+
+              {/* Coverage */}
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                  {masteryStats ? masteryStats.totalQuestions - masteryStats.newCount : 0}/{masteryStats?.totalQuestions ?? 0}
+                </span>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Coverage</span>
+              </div>
+
+              {/* Upvotes */}
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1">
+                  <Icon name="thumb_up" size="sm" className="text-primary" />
+                  <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                    {upvoted}
+                  </span>
+                </div>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Votes</span>
+              </div>
+
+              {/* Contributions */}
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1">
+                  <Icon name="edit_note" size="sm" className="text-green-600 dark:text-green-400" />
+                  <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                    {contributions}
+                  </span>
+                </div>
+                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Contrib.</span>
+              </div>
             </div>
           </Card>
         </div>
+
+        {/* Token Balance Section */}
+        {currencyInfo && (
+          <div className="px-4 mt-4">
+            <Card
+              className="flex flex-col gap-4 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              onClick={() => setShowTokenDetails(true)}
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Icon name="toll" className="text-amber-600 dark:text-amber-400" />
+                  <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
+                    {currencyInfo.config.currencyName}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TokenBalance showLabel={false} />
+                  <Icon name="chevron_right" className="text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+
+              {currencyInfo.canClaimDailyBonus && (
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await claimDailyBonus();
+                  }}
+                  className="!bg-amber-600 hover:!bg-amber-700"
+                >
+                  <Icon name="redeem" size="sm" />
+                  Claim Daily Bonus (+{currencyInfo.config.dailyLoginReward})
+                </Button>
+              )}
+            </Card>
+          </div>
+        )}
 
         {/* Cram Mode Section */}
         <div className="px-4 mt-4">
           <Card className={`flex flex-col gap-4 ${isCramModeActive ? "bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800" : ""}`}>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <Icon 
-                  name="bolt" 
-                  className={isCramModeActive ? "text-violet-600 dark:text-violet-400" : "text-text-secondary-light dark:text-text-secondary-dark"} 
+                <Icon
+                  name="bolt"
+                  className={isCramModeActive ? "text-violet-600 dark:text-violet-400" : "text-text-secondary-light dark:text-text-secondary-dark"}
                 />
                 <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
                   Cram Mode
@@ -369,7 +429,7 @@ function ProfilePageContent() {
                 </button>
               )}
             </div>
-            
+
             {isCramModeActive && daysUntilExam !== null ? (
               <div className="flex items-center gap-4">
                 <div className="flex-1">
@@ -407,26 +467,26 @@ function ProfilePageContent() {
                   </button>
                 )}
               </div>
-              
+
               <div className="flex items-center gap-6">
                 {/* Mastery Ring */}
                 <div className="relative flex-shrink-0">
                   <MasteryRing
-                    masteredPercent={masteryStats.totalQuestions > 0 
-                      ? (masteryStats.masteredCount / masteryStats.totalQuestions) * 100 
+                    masteredPercent={masteryStats.totalQuestions > 0
+                      ? (masteryStats.masteredCount / masteryStats.totalQuestions) * 100
                       : 0}
-                    reviewingPercent={masteryStats.totalQuestions > 0 
-                      ? (masteryStats.reviewingCount / masteryStats.totalQuestions) * 100 
+                    reviewingPercent={masteryStats.totalQuestions > 0
+                      ? (masteryStats.reviewingCount / masteryStats.totalQuestions) * 100
                       : 0}
-                    learningPercent={masteryStats.totalQuestions > 0 
-                      ? (masteryStats.learningCount / masteryStats.totalQuestions) * 100 
+                    learningPercent={masteryStats.totalQuestions > 0
+                      ? (masteryStats.learningCount / masteryStats.totalQuestions) * 100
                       : 0}
                     size={100}
                     strokeWidth={10}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
-                      {masteryStats.totalQuestions > 0 
+                      {masteryStats.totalQuestions > 0
                         ? Math.round((masteryStats.masteredCount / masteryStats.totalQuestions) * 100)
                         : 0}%
                     </span>
@@ -549,6 +609,117 @@ function ProfilePageContent() {
         </div>
       </BottomSheet>
 
+      {/* Token Details Bottom Sheet */}
+      {currencyInfo && (
+        <BottomSheet
+          isOpen={showTokenDetails}
+          onClose={() => setShowTokenDetails(false)}
+          title={`${currencyInfo.config.currencyName} Details`}
+        >
+          <div className="p-4 flex flex-col gap-5">
+            {/* Current Balance */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-800/30">
+                  <Icon name="toll" size="lg" className="text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-amber-700 dark:text-amber-400">Current Balance</p>
+                  <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">
+                    {currencyInfo.balance.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Session Info */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50">
+                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Free Sessions Today</p>
+                <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                  {currencyInfo.freeSessionsRemaining}/{currencyInfo.config.freePracticeSessionsPerDay}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50">
+                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Daily Bonus</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  +{currencyInfo.config.dailyLoginReward}
+                </p>
+              </div>
+            </div>
+
+            {/* Earning Section */}
+            <div className="flex flex-col gap-3">
+              <h4 className="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wide">
+                Ways to Earn
+              </h4>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="how_to_vote" className="text-green-600 dark:text-green-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Vote on answer</span>
+                  </div>
+                  <span className="font-semibold text-green-600 dark:text-green-400">+{currencyInfo.config.voteReward}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="edit_note" className="text-green-600 dark:text-green-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Submit answer</span>
+                  </div>
+                  <span className="font-semibold text-green-600 dark:text-green-400">+{currencyInfo.config.answerReward}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="calendar_today" className="text-green-600 dark:text-green-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Daily login bonus</span>
+                  </div>
+                  <span className="font-semibold text-green-600 dark:text-green-400">+{currencyInfo.config.dailyLoginReward}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Spending Section */}
+            <div className="flex flex-col gap-3">
+              <h4 className="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wide">
+                Ways to Spend
+              </h4>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="fitness_center" className="text-red-600 dark:text-red-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">Extra practice session</span>
+                  </div>
+                  <span className="font-semibold text-red-600 dark:text-red-400">-{currencyInfo.config.practiceSessionCost}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                  <div className="flex items-center gap-3">
+                    <Icon name="smart_toy" className="text-red-600 dark:text-red-400" />
+                    <span className="text-text-primary-light dark:text-text-primary-dark">AI verification</span>
+                  </div>
+                  <span className="font-semibold text-red-600 dark:text-red-400">-{currencyInfo.config.aiVerificationCost}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Claim Daily Bonus Button */}
+            {currencyInfo.canClaimDailyBonus && (
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={async () => {
+                  await claimDailyBonus();
+                  setShowTokenDetails(false);
+                }}
+                className="!bg-amber-600 hover:!bg-amber-700 mt-2"
+              >
+                <Icon name="redeem" size="sm" />
+                Claim Daily Bonus (+{currencyInfo.config.dailyLoginReward})
+              </Button>
+            )}
+          </div>
+        </BottomSheet>
+      )}
+
       {/* Edit Profile Bottom Sheet */}
       <BottomSheet
         isOpen={showEditProfile}
@@ -602,6 +773,7 @@ function ProfilePageContent() {
         isOpen={showCramSettings}
         onClose={() => setShowCramSettings(false)}
         title="Cram Mode Settings"
+        allowOverflow
       >
         <div className="p-4 flex flex-col gap-4">
           <div className="flex items-start gap-3 p-4 rounded-xl bg-violet-50 dark:bg-violet-900/20">
@@ -611,7 +783,7 @@ function ProfilePageContent() {
                 What is Cram Mode?
               </p>
               <p className="text-sm text-violet-700 dark:text-violet-300 mt-1">
-                Cram mode uses compressed review intervals to help you cover all questions before your exam. 
+                Cram mode uses compressed review intervals to help you cover all questions before your exam.
                 It will automatically disable after your exam date.
               </p>
             </div>
@@ -627,7 +799,7 @@ function ProfilePageContent() {
               onChange={(e) => setSelectedExamDate(e.target.value)}
               min={new Date().toISOString().split("T")[0]}
               max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
-              className="w-full px-4 py-3 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full max-w-full box-border px-4 py-3 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
               Select a date within the next 7 days
@@ -642,8 +814,8 @@ function ProfilePageContent() {
             >
               Cancel
             </Button>
-            <Button 
-              fullWidth 
+            <Button
+              fullWidth
               onClick={() => {
                 if (selectedExamDate) {
                   setExamDate(new Date(selectedExamDate));
@@ -652,7 +824,7 @@ function ProfilePageContent() {
               }}
               disabled={!selectedExamDate}
             >
-              Enable Cram Mode
+              Enable
             </Button>
           </div>
         </div>
@@ -672,7 +844,7 @@ function ProfilePageContent() {
                 Are you sure?
               </p>
               <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                Disabling cram mode will return to normal spaced repetition intervals. 
+                Disabling cram mode will return to normal spaced repetition intervals.
                 Your mastery progress will be preserved.
               </p>
             </div>
@@ -686,8 +858,8 @@ function ProfilePageContent() {
             >
               Keep Enabled
             </Button>
-            <Button 
-              fullWidth 
+            <Button
+              fullWidth
               onClick={() => {
                 setExamDate(null);
                 setShowDisableCramConfirm(false);

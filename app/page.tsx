@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import {
   Button,
   Icon,
+  TokenBalance,
+  DailyBonusModal,
 } from "./components";
 import { useAuth } from "./context/AuthContext";
 
@@ -24,7 +26,15 @@ export default function Home() {
   if (isAuthenticated) {
     return (
       <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark px-4">
+        {/* Daily Bonus Modal */}
+        <DailyBonusModal />
+        
         <div className="flex flex-col items-center w-full max-w-sm">
+          {/* Token Balance */}
+          <div className="mb-4">
+            <TokenBalance />
+          </div>
+          
           <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg mb-2">
             {user?.email?.charAt(0).toUpperCase() || "U"}
           </div>

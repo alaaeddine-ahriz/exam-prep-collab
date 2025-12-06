@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAIService } from "@/app/lib/services/ai";
+import { spendAIVerificationTokens, getCurrencyConfig } from "@/app/lib/services/currencyService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userAnswer, correctAnswers, questionText } = body;
+    const { userAnswer, correctAnswers, questionText, userId } = body;
 
     if (!userAnswer || typeof userAnswer !== "string") {
       return NextResponse.json(
@@ -41,13 +42,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Deduct tokens for AI verification if userId is provided
+    let newBalance: number | undefined;
+    if (userId) {
+      const config = getCurrencyConfig();
+      const spendResult = await spendAIVerificationTokens(userId);
+      
+      if (!spendResult.success) {
+        return NextResponse.json(
+          {
+            error: "Insufficient balance",
+            required: config.costs.aiVerification,
+            balance: spendResult.balance.balance,
+            currencyName: config.currency.name,
+          },
+          { status: 402 } // Payment Required
+        );
+      }
+      newBalance = spendResult.balance.balance;
+    }
+
     const result = await aiService.verifyAnswer({
       userAnswer,
       correctAnswers,
       questionText,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      newBalance,
+    });
   } catch (error) {
     console.error("Answer verification API error:", error);
     return NextResponse.json(

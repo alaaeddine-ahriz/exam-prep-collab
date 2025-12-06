@@ -8,9 +8,10 @@ interface BottomSheetProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  allowOverflow?: boolean;
 }
 
-export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetProps) {
+export function BottomSheet({ isOpen, onClose, title, children, allowOverflow = false }: BottomSheetProps) {
   // Prevent body scroll when sheet is open
   useEffect(() => {
     if (isOpen) {
@@ -57,7 +58,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
         </div>
 
         {/* Content */}
-        <div className="flex flex-col overflow-y-auto max-h-[70dvh]">
+        <div className={`flex flex-col max-h-[70dvh] overflow-x-hidden ${allowOverflow ? 'overflow-y-visible' : 'overflow-y-auto'}`}>
           {children}
         </div>
       </div>

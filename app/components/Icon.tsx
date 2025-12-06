@@ -4,7 +4,7 @@ interface IconProps {
   name: string;
   className?: string;
   filled?: boolean;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
 }
 
 const sizeClasses = {
@@ -12,6 +12,7 @@ const sizeClasses = {
   md: "text-xl",
   lg: "text-2xl",
   xl: "text-3xl",
+  "2xl": "text-4xl",
 };
 
 export function Icon({ name, className = "", filled = false, size = "lg" }: IconProps) {

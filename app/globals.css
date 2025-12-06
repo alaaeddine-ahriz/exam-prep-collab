@@ -60,17 +60,20 @@
   --border: var(--color-border-dark);
 }
 
-html {
-  height: 100%;
+html,
+body {
+  /* Use min-height instead of height to allow content to grow naturally */
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-display);
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  /* Include padding in the min-height calculation */
+  box-sizing: border-box;
   /* Safe area handling for notched devices */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);

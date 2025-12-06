@@ -25,7 +25,7 @@ export function SegmentedControl({
           <label
             key={option.value}
             className={`
-              flex h-full flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-md px-2
+              flex h-full flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-lg px-2
               text-sm font-medium leading-normal transition-all duration-200
               ${value === option.value
                 ? "bg-surface-light dark:bg-surface-dark text-text-primary-light dark:text-text-primary-dark shadow-sm"

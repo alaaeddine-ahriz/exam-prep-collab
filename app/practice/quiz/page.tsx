@@ -294,10 +294,15 @@ function PracticeQuizPageContent() {
     
     try {
       const correctAnswer = getCorrectAnswer(currentQuestion);
+      // Pass MCQ options for better context
+      const options = currentQuestion.type === "mcq" && currentQuestion.options
+        ? currentQuestion.options.map(o => ({ id: o.id, text: o.text }))
+        : undefined;
       const result = await generateExplanation(
         currentQuestion.question,
         correctAnswer,
-        userId
+        userId,
+        options
       );
       
       if (result.insufficientBalance) {
@@ -514,16 +519,18 @@ function PracticeQuizPageContent() {
               </div>
             )}
 
-            {/* Explain with AI Button */}
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={handleOpenExplanationSheet}
-              className="mt-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 hover:!from-amber-500 hover:!to-orange-600"
-            >
-              <Icon name="lightbulb" size="sm" />
-              Explain with AI
-            </Button>
+            {/* Explain with AI Button - Only for MCQ */}
+            {currentQuestion.type === "mcq" && (
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={handleOpenExplanationSheet}
+                className="mt-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 hover:!from-amber-500 hover:!to-orange-600"
+              >
+                <Icon name="lightbulb" size="sm" />
+                Explain with AI
+              </Button>
+            )}
           </div>
         )}
       </main>

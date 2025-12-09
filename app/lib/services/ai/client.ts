@@ -175,12 +175,14 @@ export interface ExplanationResult {
  * @param questionText The question text
  * @param correctAnswer The correct answer text
  * @param userId Optional user ID for token deduction
+ * @param options Optional MCQ options for context
  * @returns Explanation result with optional balance info
  */
 export async function generateExplanation(
   questionText: string,
   correctAnswer: string,
-  userId?: string
+  userId?: string,
+  options?: { id: string; text: string }[]
 ): Promise<ExplanationResult> {
   try {
     const response = await fetch("/api/ai/explain", {
@@ -192,6 +194,7 @@ export async function generateExplanation(
         questionText,
         correctAnswer,
         userId,
+        options,
       }),
     });
 

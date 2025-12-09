@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { questionText, correctAnswer, userId } = body;
+    const { questionText, correctAnswer, userId, options } = body;
 
     if (!questionText || typeof questionText !== "string") {
       return NextResponse.json(
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
     const result = await aiService.generateExplanation({
       questionText,
       correctAnswer,
+      options,
     });
 
     return NextResponse.json({

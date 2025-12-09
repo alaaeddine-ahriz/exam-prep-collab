@@ -307,17 +307,16 @@ function PracticeQuizPageContent() {
       
       if (result.insufficientBalance) {
         showTokenToast(0, "Insufficient tokens");
-        return;
+      } else {
+        // Handle token deduction
+        if (result.newBalance !== undefined && currencyInfo) {
+          const cost = currencyInfo.config.aiExplanationCost;
+          showTokenToast(-cost, "AI explanation");
+          await refreshCurrency();
+        }
+        
+        setCurrentExplanation(result.explanation);
       }
-      
-      // Handle token deduction
-      if (result.newBalance !== undefined && currencyInfo) {
-        const cost = currencyInfo.config.aiExplanationCost;
-        showTokenToast(-cost, "AI explanation");
-        await refreshCurrency();
-      }
-      
-      setCurrentExplanation(result.explanation);
     } catch (error) {
       console.error("Error generating explanation:", error);
       setCurrentExplanation("Unable to generate explanation at this time.");

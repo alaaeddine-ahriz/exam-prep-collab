@@ -13,6 +13,7 @@ import {
   MasteryRing,
   MasteryBadge,
   TokenBalance,
+  Slider,
 } from "../components";
 import { useApp } from "../context/AppContext";
 import { MasteryLevel } from "../lib/services/types";
@@ -225,12 +226,13 @@ function ProfilePageContent() {
   const [showCramSettings, setShowCramSettings] = useState(false);
   const [showDisableCramConfirm, setShowDisableCramConfirm] = useState(false);
   const [showTokenDetails, setShowTokenDetails] = useState(false);
+  const [showMasteryHelp, setShowMasteryHelp] = useState(false);
 
   // Edit profile state
   const [editName, setEditName] = useState("");
 
-  // Cram mode date picker
-  const [selectedExamDate, setSelectedExamDate] = useState<string>("");
+  // Cram mode days slider
+  const [selectedDays, setSelectedDays] = useState<number>(5);
 
   // User display info
   const displayName =
@@ -277,7 +279,7 @@ function ProfilePageContent() {
       {/* Top App Bar */}
       <TopAppBar
         title="Profile"
-        onBack={() => router.back()}
+        onBack={() => router.push("/questions")}
       />
 
       {/* Scrollable Content */}
@@ -417,10 +419,7 @@ function ProfilePageContent() {
               ) : (
                 <button
                   onClick={() => {
-                    // Default to 5 days from now
-                    const defaultDate = new Date();
-                    defaultDate.setDate(defaultDate.getDate() + 5);
-                    setSelectedExamDate(defaultDate.toISOString().split("T")[0]);
+                    setSelectedDays(5);
                     setShowCramSettings(true);
                   }}
                   className="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
@@ -454,17 +453,23 @@ function ProfilePageContent() {
           <div className="px-4 mt-4">
             <Card className="flex flex-col gap-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
-                  Mastery Overview
-                </h3>
-                {masteryStats.dueToday > 0 && (
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">
+                    Mastery Overview
+                  </h3>
                   <button
-                    onClick={() => router.push("/practice/setup")}
-                    className="text-sm font-medium text-primary hover:text-primary-hover transition-colors flex items-center gap-1"
+                    onClick={() => setShowMasteryHelp(true)}
+                    className="flex items-center justify-center w-5 h-5 rounded-full bg-text-secondary-light/20 dark:bg-text-secondary-dark/20 hover:bg-text-secondary-light/30 dark:hover:bg-text-secondary-dark/30 transition-colors"
+                    aria-label="Learn about mastery"
                   >
+                    <span className="text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark">?</span>
+                  </button>
+                </div>
+                {masteryStats.dueToday > 0 && (
+                  <span className="text-sm font-medium text-primary flex items-center gap-1">
                     <Icon name="schedule" size="sm" />
                     {masteryStats.dueToday} due
-                  </button>
+                  </span>
                 )}
               </div>
 
@@ -721,6 +726,88 @@ function ProfilePageContent() {
         </BottomSheet>
       )}
 
+      {/* Mastery Help Bottom Sheet */}
+      <BottomSheet
+        isOpen={showMasteryHelp}
+        onClose={() => setShowMasteryHelp(false)}
+        title="How Mastery Works"
+      >
+        <div className="p-4 flex flex-col gap-5">
+          {/* Intro */}
+          <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+            Our spaced repetition system helps you learn efficiently by prioritizing questions you need to practice most.
+          </p>
+
+          {/* Mastery Levels */}
+          <div className="flex flex-col gap-3">
+            <h4 className="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wide">
+              Mastery Levels
+            </h4>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
+                <MasteryBadge level="new" size="sm" showLabel={false} />
+                <div className="flex-1">
+                  <p className="font-medium text-text-primary-light dark:text-text-primary-dark">New</p>
+                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Questions you haven&apos;t practiced yet</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                <MasteryBadge level="learning" size="sm" showLabel={false} />
+                <div className="flex-1">
+                  <p className="font-medium text-text-primary-light dark:text-text-primary-dark">Learning</p>
+                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Less than 3 correct answers in a row</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                <MasteryBadge level="reviewing" size="sm" showLabel={false} />
+                <div className="flex-1">
+                  <p className="font-medium text-text-primary-light dark:text-text-primary-dark">Reviewing</p>
+                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">3+ correct answers, building retention</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                <MasteryBadge level="mastered" size="sm" showLabel={false} />
+                <div className="flex-1">
+                  <p className="font-medium text-text-primary-light dark:text-text-primary-dark">Mastered</p>
+                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">6+ correct answers with ease—you know this!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Due Explanation */}
+          <div className="flex flex-col gap-3">
+            <h4 className="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wide">
+              What &quot;Due&quot; Means
+            </h4>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 dark:bg-primary/10">
+              <Icon name="schedule" className="text-primary mt-0.5" />
+              <div>
+                <p className="text-sm text-text-primary-light dark:text-text-primary-dark">
+                  When you answer correctly, the question is scheduled for review later. As you keep getting it right, the interval grows (1 day → 3 days → 7 days → etc).
+                </p>
+                <p className="text-sm text-text-primary-light dark:text-text-primary-dark mt-2">
+                  A <span className="font-semibold text-primary">&quot;due&quot;</span> question has reached its review time—the optimal moment to practice before you forget!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Smart Practice */}
+          <div className="flex flex-col gap-3">
+            <h4 className="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wide">
+              Smart Practice Selection
+            </h4>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-violet-50 dark:bg-violet-900/20">
+              <Icon name="psychology" className="text-violet-600 dark:text-violet-400 mt-0.5" />
+              <p className="text-sm text-text-primary-light dark:text-text-primary-dark">
+                When you start a practice session, questions are prioritized: <span className="font-medium">overdue</span> and <span className="font-medium">new</span> questions first, then <span className="font-medium">due today</span>, and finally questions you&apos;ve recently reviewed. This ensures efficient coverage!
+              </p>
+            </div>
+          </div>
+        </div>
+      </BottomSheet>
+
       {/* Edit Profile Bottom Sheet */}
       <BottomSheet
         isOpen={showEditProfile}
@@ -791,25 +878,24 @@ function ProfilePageContent() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
-              Exam Date
-            </label>
-            <input
-              type="date"
-              value={selectedExamDate}
-              onChange={(e) => setSelectedExamDate(e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-              max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
-              className="w-full max-w-full box-border px-4 py-3 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
+            <Slider
+              label="Days Until Exam"
+              value={selectedDays}
+              min={1}
+              max={7}
+              step={1}
+              onChange={setSelectedDays}
+              displayValue={(() => {
+                const date = new Date();
+                date.setDate(date.getDate() + selectedDays);
+                return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+              })()}
             />
-            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-              Select a date within the next 7 days
-            </p>
           </div>
 
           <div className="flex gap-3 mt-4">
             <Button
-              variant="outline"
+              variant="secondary"
               fullWidth
               onClick={() => setShowCramSettings(false)}
             >
@@ -818,12 +904,11 @@ function ProfilePageContent() {
             <Button
               fullWidth
               onClick={() => {
-                if (selectedExamDate) {
-                  setExamDate(new Date(selectedExamDate));
-                }
+                const examDate = new Date();
+                examDate.setDate(examDate.getDate() + selectedDays);
+                setExamDate(examDate);
                 setShowCramSettings(false);
               }}
-              disabled={!selectedExamDate}
             >
               Enable
             </Button>
@@ -853,9 +938,10 @@ function ProfilePageContent() {
 
           <div className="flex gap-3">
             <Button
-              variant="outline"
+              variant="secondary"
               fullWidth
               onClick={() => setShowDisableCramConfirm(false)}
+              className="!bg-amber-100 !text-amber-700 hover:!bg-amber-200 dark:!bg-amber-900/30 dark:!text-amber-300 dark:hover:!bg-amber-900/50"
             >
               Keep Enabled
             </Button>

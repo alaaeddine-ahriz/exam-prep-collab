@@ -42,7 +42,7 @@ function PracticeQuizPageContent() {
   useEffect(() => {
     // Skip if already loaded
     if (questionsLoadedRef.current) return;
-    
+
     // Wait for questions to load
     if (questions.length === 0) return;
 
@@ -60,7 +60,7 @@ function PracticeQuizPageContent() {
       } catch (error) {
         console.error("Error fetching practice questions:", error);
         // Fallback to random
-        const filtered = questions.filter((q) => 
+        const filtered = questions.filter((q) =>
           source === "all" || q.type === source
         );
         const shuffled = [...filtered].sort(() => Math.random() - 0.5);
@@ -71,7 +71,7 @@ function PracticeQuizPageContent() {
         setIsLoadingQuestions(false);
       }
     };
-    
+
     fetchQuestions();
   }, [questions.length, source, count, getPracticeQuestions]);
 
@@ -156,16 +156,16 @@ function PracticeQuizPageContent() {
 
   const handleMCQSelect = (optionId: string) => {
     if (showResult) return; // Don't allow selection after showing result
-    
+
     setSelectedMCQAnswer(optionId);
-    
+
     // Immediately check the answer
     if (currentQuestion.type === "mcq" && currentQuestion.options) {
       const topOption = currentQuestion.options.reduce((max, opt) =>
         opt.votes > max.votes ? opt : max
       );
       const isCorrect = optionId === topOption.id;
-      
+
       setShowResult(true);
       setScore(prev => ({
         correct: prev.correct + (isCorrect ? 1 : 0),
@@ -199,7 +199,7 @@ function PracticeQuizPageContent() {
           currentQuestion.question,
           userId // Pass userId for token deduction
         );
-        
+
         // Handle token deduction
         if (result.newBalance !== undefined && currencyInfo) {
           const cost = currencyInfo.config.aiVerificationCost;
@@ -207,7 +207,7 @@ function PracticeQuizPageContent() {
           // Refresh currency to update the header/profile
           await refreshCurrency();
         }
-        
+
         const verification = result.verification;
         setAiVerification(verification);
         setShowResult(true);
@@ -263,11 +263,11 @@ function PracticeQuizPageContent() {
     }
   };
 
-  const isCorrect = showResult 
+  const isCorrect = showResult
     ? (currentQuestion.type === "mcq" ? checkMCQAnswer() : (aiVerification?.isCorrect ?? false))
     : false;
-  const canCheck = currentQuestion.type === "mcq" 
-    ? selectedMCQAnswer !== null 
+  const canCheck = currentQuestion.type === "mcq"
+    ? selectedMCQAnswer !== null
     : saqAnswer.trim().length > 0;
 
   return (
@@ -291,131 +291,130 @@ function PracticeQuizPageContent() {
       </header>
 
       <main className="flex-grow p-4 pb-24 space-y-6">
-          {/* Progress Bar */}
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-6 justify-between items-center">
-              <p className="text-sm font-medium leading-normal">
-                Question {currentQuestionIndex + 1} of {practiceQuestions.length}
-              </p>
-              <p className="text-sm font-medium text-primary">
-                Score: {score.correct}/{score.total}
-              </p>
-            </div>
-            <ProgressBar value={progress} variant="primary" size="md" />
+        {/* Progress Bar */}
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-6 justify-between items-center">
+            <p className="text-sm font-medium leading-normal">
+              Question {currentQuestionIndex + 1} of {practiceQuestions.length}
+            </p>
+            <p className="text-sm font-medium text-primary">
+              Score: {score.correct}/{score.total}
+            </p>
           </div>
+          <ProgressBar value={progress} variant="primary" size="md" />
+        </div>
 
-          {/* Question */}
-          <h3 className="text-xl font-bold leading-tight pt-4 pb-2">
-            {currentQuestion.question}
-          </h3>
+        {/* Question */}
+        <h3 className="text-xl font-bold leading-tight pt-4 pb-2">
+          {currentQuestion.question}
+        </h3>
 
-          {/* MCQ Options */}
-          {currentQuestion.type === "mcq" && currentQuestion.options && (
-            <div className="flex flex-col gap-3">
-              {currentQuestion.options.map((option) => {
-                let optionClassName = "";
-                if (showResult && currentQuestion.options) {
-                  const topOption = currentQuestion.options.reduce((max, opt) =>
-                    opt.votes > max.votes ? opt : max
-                  );
-                  if (option.id === topOption.id) {
-                    optionClassName = "!border-success !bg-success/10";
-                  } else if (option.id === selectedMCQAnswer && option.id !== topOption.id) {
-                    optionClassName = "!border-error !bg-error/10";
-                  }
+        {/* MCQ Options */}
+        {currentQuestion.type === "mcq" && currentQuestion.options && (
+          <div className="flex flex-col gap-3">
+            {currentQuestion.options.map((option) => {
+              let optionClassName = "";
+              if (showResult && currentQuestion.options) {
+                const topOption = currentQuestion.options.reduce((max, opt) =>
+                  opt.votes > max.votes ? opt : max
+                );
+                if (option.id === topOption.id) {
+                  optionClassName = "!border-success !bg-success/10";
+                } else if (option.id === selectedMCQAnswer && option.id !== topOption.id) {
+                  optionClassName = "!border-error !bg-error/10";
                 }
+              }
 
-                  return (
-                    <PracticeAnswerOption
-                      key={option.id}
-                      id={option.id}
-                      name="answer-options"
-                      label={`${option.id.toUpperCase()}. ${option.text}`}
-                      checked={selectedMCQAnswer === option.id}
-                      onChange={() => handleMCQSelect(option.id)}
-                      className={optionClassName}
-                    />
-                  );
-              })}
-            </div>
-          )}
-
-          {/* SAQ Input */}
-          {currentQuestion.type === "saq" && (
-            <div className="space-y-4">
-              {!showResult ? (
-                <TextArea
-                  label="Your Answer"
-                  placeholder="Type your answer here..."
-                  value={saqAnswer}
-                  onChange={(e) => setSaqAnswer(e.target.value)}
-                  maxLength={1000}
+              return (
+                <PracticeAnswerOption
+                  key={option.id}
+                  id={option.id}
+                  name="answer-options"
+                  label={`${option.id.toUpperCase()}. ${option.text}`}
+                  checked={selectedMCQAnswer === option.id}
+                  onChange={() => handleMCQSelect(option.id)}
+                  className={optionClassName}
                 />
-              ) : (
-                <div className="space-y-4">
-                  <Card variant="outlined">
-                    <p className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-2">
-                      Your Answer:
-                    </p>
-                    <p className="text-text-primary-light dark:text-text-primary-dark">
-                      {saqAnswer}
-                    </p>
-                  </Card>
-                  <Card className="bg-primary/5 dark:bg-primary/10 border-primary/20">
-                    <p className="text-sm font-medium text-primary mb-2">
-                      Top Community Answer:
-                    </p>
-                    <p className="text-text-primary-light dark:text-text-primary-dark">
-                      {getCorrectAnswer(currentQuestion)}
-                    </p>
-                  </Card>
-                </div>
-              )}
-            </div>
-          )}
+              );
+            })}
+          </div>
+        )}
 
-          {/* Result Feedback */}
-          {showResult && (
-            <div
-              className={`flex flex-col gap-2 p-4 rounded-xl ${
-                isCorrect
-                  ? "bg-success/10"
-                  : "bg-warning/10"
-              }`}
-            >
-              <div className={`flex items-center gap-3 ${isCorrect ? "text-success" : "text-warning"}`}>
-                <Icon
-                  name={isCorrect ? "check_circle" : "info"}
-                  filled
-                  size="lg"
-                />
-                <span className="font-semibold">
-                  {isCorrect 
-                    ? "Great! Your answer matches the consensus." 
-                    : "Your answer differs from the consensus."}
-                </span>
-              </div>
-              
-              {/* AI Explanation for SAQ */}
-              {currentQuestion.type === "saq" && aiVerification && (
-                <div className="mt-2 pt-2 border-t border-black/10 dark:border-white/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon name="psychology" size="sm" className="text-primary" />
-                    <span className="text-sm font-medium text-primary">AI Analysis</span>
-                    {aiVerification.confidence !== undefined && (
-                      <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                        ({Math.round(aiVerification.confidence * 100)}% confidence)
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-text-primary-light dark:text-text-primary-dark">
-                    {aiVerification.explanation}
+        {/* SAQ Input */}
+        {currentQuestion.type === "saq" && (
+          <div className="space-y-4">
+            {!showResult ? (
+              <TextArea
+                label="Your Answer"
+                placeholder="Type your answer here..."
+                value={saqAnswer}
+                onChange={(e) => setSaqAnswer(e.target.value)}
+                maxLength={1000}
+              />
+            ) : (
+              <div className="space-y-4">
+                <Card variant="outlined">
+                  <p className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-2">
+                    Your Answer:
                   </p>
-                </div>
-              )}
+                  <p className="text-text-primary-light dark:text-text-primary-dark">
+                    {saqAnswer}
+                  </p>
+                </Card>
+                <Card className="bg-primary/5 dark:bg-primary/10 border-primary/20">
+                  <p className="text-sm font-medium text-primary mb-2">
+                    Top Community Answer:
+                  </p>
+                  <p className="text-text-primary-light dark:text-text-primary-dark">
+                    {getCorrectAnswer(currentQuestion)}
+                  </p>
+                </Card>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Result Feedback */}
+        {showResult && (
+          <div
+            className={`flex flex-col gap-2 p-4 rounded-xl ${isCorrect
+                ? "bg-success/10"
+                : "bg-warning/10"
+              }`}
+          >
+            <div className={`flex items-center gap-3 ${isCorrect ? "text-success" : "text-warning"}`}>
+              <Icon
+                name={isCorrect ? "check_circle" : "info"}
+                filled
+                size="lg"
+              />
+              <span className="font-semibold">
+                {isCorrect
+                  ? "Great! Your answer matches the consensus."
+                  : "Your answer differs from the consensus."}
+              </span>
             </div>
-          )}
-        </main>
+
+            {/* AI Explanation for SAQ */}
+            {currentQuestion.type === "saq" && aiVerification && (
+              <div className="mt-2 pt-2 border-t border-black/10 dark:border-white/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon name="psychology" size="sm" className="text-primary" />
+                  <span className="text-sm font-medium text-primary">AI Analysis</span>
+                  {aiVerification.confidence !== undefined && (
+                    <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                      ({Math.round(aiVerification.confidence * 100)}% confidence)
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-text-primary-light dark:text-text-primary-dark">
+                  {aiVerification.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
 
       {/* Fixed Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">

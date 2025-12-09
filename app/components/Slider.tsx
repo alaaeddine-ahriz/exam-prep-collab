@@ -8,6 +8,7 @@ interface SliderProps {
   step?: number;
   onChange?: (value: number) => void;
   className?: string;
+  displayValue?: string; // Optional custom display value
 }
 
 export function Slider({
@@ -18,6 +19,7 @@ export function Slider({
   step = 1,
   onChange,
   className = "",
+  displayValue,
 }: SliderProps) {
   const percentage = ((value - min) / (max - min)) * 100;
 
@@ -35,7 +37,7 @@ export function Slider({
           {label}
         </p>
         <p className="text-text-primary-light dark:text-text-primary-dark text-base font-bold leading-normal">
-          {value}
+          {displayValue ?? value}
         </p>
       </div>
       <div className="flex h-4 w-full items-center gap-4 pt-2">

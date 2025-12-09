@@ -125,13 +125,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return authUser?.id || "local-user";
   }, [authUser]);
 
-  // Get the display name for the current user
+  // Get the display name for the current user - prefer saved name over email prefix
   const getCurrentUserName = useCallback(() => {
+    // First try the saved name from the database
+    if (user?.name) {
+      return user.name;
+    }
+    // Fall back to email prefix
     if (authUser?.email) {
       return authUser.email.split("@")[0];
     }
     return "Anonymous";
-  }, [authUser]);
+  }, [authUser, user]);
 
   // Fetch questions from API
   const refreshQuestions = useCallback(async () => {

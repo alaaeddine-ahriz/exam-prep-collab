@@ -217,7 +217,7 @@ function MenuItem({
 
 function ProfilePageContent() {
   const router = useRouter();
-  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode, currencyInfo, claimDailyBonus } = useApp();
+  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode, currencyInfo, claimDailyBonus, refreshUser } = useApp();
   const { user: authUser, signOut } = useAuth();
 
   // Bottom sheet states
@@ -234,9 +234,9 @@ function ProfilePageContent() {
   // Cram mode days slider
   const [selectedDays, setSelectedDays] = useState<number>(5);
 
-  // User display info
+  // User display info - prefer saved name over email-derived name
   const displayName =
-    authUser?.email?.split("@")[0] || appUser?.name || "User";
+    appUser?.name || authUser?.email?.split("@")[0] || "User";
   const displaySubtitle =
     authUser?.email || appUser?.email || "Student";
 
@@ -285,7 +285,10 @@ function ProfilePageContent() {
         throw new Error('Failed to update profile');
       }
 
-      // Close the sheet - the name update will be reflected on next data refresh
+      // Refresh user data to get the updated name
+      await refreshUser();
+
+      // Close the sheet
       setShowEditProfile(false);
     } catch (error) {
       console.error('Error saving profile:', error);

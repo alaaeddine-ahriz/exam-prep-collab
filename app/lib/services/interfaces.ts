@@ -30,6 +30,7 @@ export interface IQuestionService {
   voteOnSAQAnswer(questionId: number, answerId: string, userId: string): Promise<void>;
   hasUserVoted(userId: string, questionId: number): Promise<boolean>;
   getUserVote(userId: string, questionId: number): Promise<{ optionId?: string; answerId?: string } | null>;
+  getAllUserVotes(userId: string): Promise<Record<number, { optionId?: string; answerId?: string }>>;
   changeVote(userId: string, questionId: number, newOptionId?: string, newAnswerId?: string): Promise<void>;
 }
 
@@ -44,6 +45,7 @@ export interface IUserService {
   updateStreak(userId: string, streak: number): Promise<void>;
   updateLastActive(userId: string): Promise<void>;
   updateExamDate(userId: string, examDate: string | null): Promise<void>;
+  updateName(userId: string, name: string): Promise<void>;
 
   // History
   recordHistory(dto: RecordHistoryDTO): Promise<void>;
@@ -53,7 +55,7 @@ export interface IUserService {
 export interface IDataService {
   questions: IQuestionService;
   users: IUserService;
-  
+
   // Lifecycle methods
   initialize(): Promise<void>;
   close(): Promise<void>;

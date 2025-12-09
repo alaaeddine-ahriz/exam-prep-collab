@@ -217,7 +217,7 @@ function MenuItem({
 
 function ProfilePageContent() {
   const router = useRouter();
-  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode, currencyInfo, claimDailyBonus } = useApp();
+  const { user: appUser, masteryStats, isCramModeActive, daysUntilExam, setExamDate, studyMode, currencyInfo, claimDailyBonus, refreshUser } = useApp();
   const { user: authUser, signOut } = useAuth();
 
   // Bottom sheet states
@@ -234,9 +234,9 @@ function ProfilePageContent() {
   // Cram mode days slider
   const [selectedDays, setSelectedDays] = useState<number>(5);
 
-  // User display info
+  // User display info - prefer saved name over email-derived name
   const displayName =
-    authUser?.email?.split("@")[0] || appUser?.name || "User";
+    appUser?.name || authUser?.email?.split("@")[0] || "User";
   const displaySubtitle =
     authUser?.email || appUser?.email || "Student";
 
@@ -267,11 +267,34 @@ function ProfilePageContent() {
     setShowEditProfile(true);
   };
 
-  const handleSaveProfile = () => {
-    // In a real app, this would update the user's profile in the backend
-    // For now, we'll just close the sheet
-    setShowEditProfile(false);
-    // Could dispatch to app context or make API call here
+  const handleSaveProfile = async () => {
+    const userId = authUser?.id;
+    if (!userId || !editName.trim()) {
+      setShowEditProfile(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      // Refresh user data to get the updated name
+      await refreshUser();
+
+      // Close the sheet
+      setShowEditProfile(false);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      // Still close the sheet but could show an error toast here
+      setShowEditProfile(false);
+    }
   };
 
   return (

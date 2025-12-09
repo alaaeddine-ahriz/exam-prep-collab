@@ -15,7 +15,7 @@ function generateId(): string {
 export class SupabaseQuestionService implements IQuestionService {
   private async mapToQuestion(dbQuestion: any): Promise<Question> {
     const supabase = getSupabaseClient();
-    
+
     const question: Question = {
       id: dbQuestion.id,
       type: dbQuestion.type,
@@ -295,6 +295,26 @@ export class SupabaseQuestionService implements IQuestionService {
       optionId: data.option_id || undefined,
       answerId: data.answer_id || undefined,
     };
+  }
+
+  async getAllUserVotes(userId: string): Promise<Record<number, { optionId?: string; answerId?: string }>> {
+    const supabase = getSupabaseClient();
+
+    const { data: votes, error } = await supabase
+      .from("votes")
+      .select("question_id, option_id, answer_id")
+      .eq("user_id", userId);
+
+    if (error) throw error;
+
+    const result: Record<number, { optionId?: string; answerId?: string }> = {};
+    for (const vote of votes || []) {
+      result[vote.question_id] = {
+        optionId: vote.option_id || undefined,
+        answerId: vote.answer_id || undefined,
+      };
+    }
+    return result;
   }
 
   async changeVote(

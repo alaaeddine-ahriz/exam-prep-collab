@@ -43,7 +43,10 @@ function QuestionBankPageContent() {
       <DailyBonusModal />
 
       {/* Top App Bar */}
-      <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+      <header
+        className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm cursor-pointer"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      >
         <div className="flex items-center p-4 pb-2 justify-between">
           <h1 className="text-text-primary-light dark:text-text-primary-dark text-2xl font-bold leading-tight tracking-tight flex-1">
             Question Bank

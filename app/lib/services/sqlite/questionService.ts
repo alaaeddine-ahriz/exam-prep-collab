@@ -262,6 +262,23 @@ export class SQLiteQuestionService implements IQuestionService {
     };
   }
 
+  async getAllUserVotes(userId: string): Promise<Record<number, { optionId?: string; answerId?: string }>> {
+    const db = getDatabase();
+
+    const votes = db
+      .prepare("SELECT question_id, option_id, answer_id FROM votes WHERE user_id = ?")
+      .all(userId) as { question_id: number; option_id: string | null; answer_id: string | null }[];
+
+    const result: Record<number, { optionId?: string; answerId?: string }> = {};
+    for (const vote of votes) {
+      result[vote.question_id] = {
+        optionId: vote.option_id || undefined,
+        answerId: vote.answer_id || undefined,
+      };
+    }
+    return result;
+  }
+
   async changeVote(
     userId: string,
     questionId: number,

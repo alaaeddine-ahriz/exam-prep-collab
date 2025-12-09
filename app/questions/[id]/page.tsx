@@ -16,6 +16,7 @@ import {
   ProtectedRoute,
 } from "../../components";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import { getTotalVotes } from "../../lib/utils";
 import { fixGrammarAndSpelling } from "../../lib/services/ai/client";
 
@@ -33,6 +34,7 @@ function QuestionDetailsPageContent() {
     getUserVoteForQuestion,
     loading
   } = useApp();
+  const { user: authUser } = useAuth();
 
   const question = getQuestion(questionId);
   const userVote = getUserVoteForQuestion(questionId);
@@ -156,7 +158,16 @@ function QuestionDetailsPageContent() {
   };
 
   const handleSubmitFeedback = () => {
-    console.log("Submitting feedback:", { text: feedbackText });
+    const subject = encodeURIComponent(`[ExamPrep] Issue Report - Question #${questionId}`);
+    const newline = '%0D%0A';
+    const body =
+      `Question %23${questionId}${newline}` +
+      `---%0D%0A` +
+      `${encodeURIComponent(question?.question || 'N/A')}${newline}` +
+      `---%0D%0A%0D%0A` +
+      `Reported by: ${encodeURIComponent(authUser?.id || 'Unknown')}${newline}%0D%0A` +
+      `Issue Description:${newline}${encodeURIComponent(feedbackText)}`;
+    window.location.href = `mailto:alaaahriz@gmail.com?subject=${subject}&body=${body}`;
     setIsReportOpen(false);
     setFeedbackText("");
   };
@@ -178,7 +189,7 @@ function QuestionDetailsPageContent() {
           </h2>
           <div className="flex items-center gap-1.5 text-sm text-text-secondary-light dark:text-text-secondary-dark">
             <Icon name="person" size="sm" className="opacity-60" />
-            <span>Added by <span className="font-medium">{question.createdBy}</span></span>
+            <span><span className="font-medium">{question.createdBy}</span></span>
           </div>
         </Card>
 
@@ -198,7 +209,7 @@ function QuestionDetailsPageContent() {
             <p className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-2">
               Select the answer you believe is correct:
             </p>
-            {question.options.map((option) => {
+            {[...question.options].sort((a, b) => a.id.localeCompare(b.id)).map((option) => {
               const percentage = totalVotes > 0
                 ? Math.round((option.votes / totalVotes) * 100)
                 : 0;

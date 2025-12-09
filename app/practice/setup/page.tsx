@@ -19,7 +19,7 @@ function PracticeModeSetupPageContent() {
   const { questions, masteryStats, isCramModeActive, daysUntilExam, currencyInfo, refreshCurrency } = useApp();
   const { user: authUser } = useAuth();
   const { showTokenToast } = useTokenToast();
-  
+
   const [questionSource, setQuestionSource] = useState<"all" | "mcq" | "saq">("all");
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,9 +27,26 @@ function PracticeModeSetupPageContent() {
 
   const userId = authUser?.id || "local-user";
 
-  const filteredCount = questions.filter((q) => 
-    questionSource === "all" || q.type === questionSource
-  ).length;
+  // Helper to check if a question has community content
+  const hasCommunitContent = (q: typeof questions[0]) => {
+    if (q.type === "mcq") {
+      return q.options?.some(opt => opt.votes > 0) ?? false;
+    } else {
+      return (q.answers?.length ?? 0) > 0;
+    }
+  };
+
+  // Count questions with community content by type
+  const mcqWithVotes = questions.filter(q => q.type === "mcq" && q.options?.some(opt => opt.votes > 0)).length;
+  const saqWithAnswers = questions.filter(q => q.type === "saq" && (q.answers?.length ?? 0) > 0).length;
+  const allWithContent = mcqWithVotes + saqWithAnswers;
+
+  // Get filtered count based on selected source (only questions with community content)
+  const filteredCount = questionSource === "all"
+    ? allWithContent
+    : questionSource === "mcq"
+      ? mcqWithVotes
+      : saqWithAnswers;
 
   const maxQuestions = Math.min(filteredCount, 50);
 
@@ -56,10 +73,10 @@ function PracticeModeSetupPageContent() {
           }
           throw new Error(errorData.error || "Failed to start practice");
         }
-        
+
         // Show toast for spending tokens
         showTokenToast(-currencyInfo.config.practiceSessionCost, "Practice session");
-        
+
         // Update the global currency state
         await refreshCurrency();
       }
@@ -68,7 +85,7 @@ function PracticeModeSetupPageContent() {
       await fetch(`/api/users/${userId}/balance/record-session`, {
         method: "POST",
       });
-      
+
       // Refresh currency to update free sessions count
       await refreshCurrency();
 
@@ -76,7 +93,7 @@ function PracticeModeSetupPageContent() {
         source: questionSource,
         count: String(Math.min(numberOfQuestions, maxQuestions)),
       });
-      
+
       router.push(`/practice/quiz?${params.toString()}`);
     } catch (err) {
       console.error("Error starting practice:", err);
@@ -90,7 +107,7 @@ function PracticeModeSetupPageContent() {
     if (isCramModeActive && daysUntilExam !== null) {
       return `Cram Mode: ${daysUntilExam} day${daysUntilExam !== 1 ? "s" : ""} until exam`;
     }
-    return masteryStats?.dueToday 
+    return masteryStats?.dueToday
       ? `Smart Review: ${masteryStats.dueToday} questions due`
       : "Smart Review: Prioritizes questions you need to practice";
   };
@@ -180,45 +197,45 @@ function PracticeModeSetupPageContent() {
         <section>
           <h2 className="text-text-primary-light dark:text-text-primary-dark tracking-tight text-xl font-bold leading-tight pb-3">
             Question Type
-        </h2>
+          </h2>
           <div className="flex flex-col gap-3">
-          <RadioOption
-            id="all"
-            name="question_source"
-            label="All Questions"
-              description={`Practice from all ${questions.length} questions`}
-            checked={questionSource === "all"}
-            onChange={() => setQuestionSource("all")}
-          />
-          <RadioOption
-            id="mcq"
-            name="question_source"
-            label="Multiple Choice Only"
-              description={`${questions.filter(q => q.type === "mcq").length} MCQ questions`}
-            checked={questionSource === "mcq"}
-            onChange={() => setQuestionSource("mcq")}
-          />
-          <RadioOption
-            id="saq"
-            name="question_source"
-            label="Short Answer Only"
-              description={`${questions.filter(q => q.type === "saq").length} SAQ questions`}
-            checked={questionSource === "saq"}
-            onChange={() => setQuestionSource("saq")}
-          />
-        </div>
+            <RadioOption
+              id="all"
+              name="question_source"
+              label="All Questions"
+              description={`${allWithContent} questions with community votes/answers`}
+              checked={questionSource === "all"}
+              onChange={() => setQuestionSource("all")}
+            />
+            <RadioOption
+              id="mcq"
+              name="question_source"
+              label="Multiple Choice Only"
+              description={`${mcqWithVotes} MCQ with votes`}
+              checked={questionSource === "mcq"}
+              onChange={() => setQuestionSource("mcq")}
+            />
+            <RadioOption
+              id="saq"
+              name="question_source"
+              label="Short Answer Only"
+              description={`${saqWithAnswers} SAQ with answers`}
+              checked={questionSource === "saq"}
+              onChange={() => setQuestionSource("saq")}
+            />
+          </div>
         </section>
 
         {/* Number of Questions Slider */}
         <section>
-        <Slider
-          label="Number of Questions"
-          value={Math.min(numberOfQuestions, maxQuestions)}
-          min={1}
-          max={maxQuestions}
-          step={1}
-          onChange={setNumberOfQuestions}
-        />
+          <Slider
+            label="Number of Questions"
+            value={Math.min(numberOfQuestions, maxQuestions)}
+            min={1}
+            max={maxQuestions}
+            step={1}
+            onChange={setNumberOfQuestions}
+          />
         </section>
       </main>
 

@@ -39,22 +39,22 @@ interface AppContextType {
   loading: boolean;
   error: string | null;
   currentUserName: string;
-  
+
   // Mastery state
   mastery: QuestionMastery[];
   masteryStats: MasteryStats | null;
-  
+
   // Study mode (global cram mode)
   studyMode: StudyModeSettings;
   isCramModeActive: boolean;
   daysUntilExam: number | null;
   setExamDate: (date: Date | null) => void;
-  
+
   // Currency state
   currencyInfo: CurrencyInfo | null;
   refreshCurrency: () => Promise<void>;
   claimDailyBonus: () => Promise<{ success: boolean; amount?: number }>;
-  
+
   // Question operations
   refreshQuestions: () => Promise<void>;
   addQuestion: (question: { type: "mcq" | "saq"; question: string; createdBy: string; options?: { id: string; text: string }[] }) => Promise<Question | null>;
@@ -63,11 +63,11 @@ interface AppContextType {
   addSAQAnswer: (questionId: number, answerText: string) => Promise<void>;
   getQuestion: (id: number) => Question | undefined;
   getUserVoteForQuestion: (questionId: number) => { optionId?: string; answerId?: string } | null;
-  
+
   // User operations
   refreshUser: () => Promise<void>;
   addToHistory: (entry: Omit<AnswerHistory, "id">) => Promise<void>;
-  
+
   // Mastery operations
   refreshMastery: (force?: boolean) => Promise<void>;
   getMasteryForQuestion: (questionId: number) => QuestionMastery | null;
@@ -99,12 +99,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Track pending operations to prevent duplicates
   const [pendingVotes, setPendingVotes] = useState<Set<number>>(new Set());
   const [pendingAnswers, setPendingAnswers] = useState<Set<number>>(new Set());
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  
+
   // Ref to track if mastery was already loaded (to prevent re-fetches during quiz)
   const masteryLoadedRef = useRef(false);
 
@@ -113,7 +113,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     examDate: user?.examDate || null,
     isEnabled: user?.examDate !== null && user?.examDate !== undefined,
   };
-  
+
   // Calculate derived study mode values
   const daysUntilExam = calculateDaysUntilExam(studyMode.examDate);
   const isCramModeActive = studyMode.isEnabled && daysUntilExam !== null && daysUntilExam >= 0 && daysUntilExam <= 7;
@@ -162,7 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (authUser?.email) {
         headers["x-user-email"] = authUser.email;
       }
-      
+
       const response = await fetch(`/api/users/${userId}`, { headers });
       if (!response.ok) throw new Error("Failed to fetch user");
       const data = await response.json();
@@ -214,15 +214,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Claim daily bonus
   const claimDailyBonus = useCallback(async (): Promise<{ success: boolean; amount?: number }> => {
     const userId = getCurrentUserId();
-    
+
     // Optimistically update UI to hide the claim button immediately
     setCurrencyInfo(prev => prev ? { ...prev, canClaimDailyBonus: false } : prev);
-    
+
     try {
       const response = await fetch(`/api/users/${userId}/balance/claim-daily`, {
         method: "POST",
       });
-      
+
       if (!response.ok) {
         if (response.status === 409) {
           // Already claimed - refresh to get correct state
@@ -233,21 +233,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCurrencyInfo(prev => prev ? { ...prev, canClaimDailyBonus: true } : prev);
         throw new Error("Failed to claim bonus");
       }
-      
+
       const data = await response.json();
-      
+
       // Update balance with the new value from the response
-      setCurrencyInfo(prev => prev ? { 
-        ...prev, 
+      setCurrencyInfo(prev => prev ? {
+        ...prev,
         balance: data.newBalance,
-        canClaimDailyBonus: false 
+        canClaimDailyBonus: false
       } : prev);
-      
+
       // Show toast for daily bonus
       if (data.amount) {
         showTokenToast(data.amount, "Daily login bonus");
       }
-      
+
       return { success: true, amount: data.amount };
     } catch (err) {
       console.error("Error claiming daily bonus:", err);
@@ -259,14 +259,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshMastery = useCallback(async (force: boolean = false) => {
     // Skip if already loaded and not forcing
     if (masteryLoadedRef.current && !force) return;
-    
+
     const userId = getCurrentUserId();
     try {
       // Fetch individual mastery records
       const response = await fetch(`/api/users/${userId}/mastery`);
       if (!response.ok) throw new Error("Failed to fetch mastery");
       const data = await response.json();
-      
+
       // Convert date strings to Date objects
       const masteryWithDates = (data || []).map((m: QuestionMastery) => ({
         ...m,
@@ -293,12 +293,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Don't fetch user-specific data until auth is ready
     if (authLoading) return;
-    
+
     const loadData = async () => {
       setLoading(true);
       // Always fetch questions (not user-specific)
       await refreshQuestions();
-      
+
       // Only fetch user-specific data if authenticated
       if (authUser?.id) {
         await Promise.all([refreshUser(), refreshUserVotes(), refreshCurrency()]);
@@ -350,15 +350,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [getCurrentUserId, refreshUser]);
 
   // Add question
-  const addQuestion = async (questionData: { 
-    type: "mcq" | "saq"; 
-    question: string; 
-    createdBy: string; 
-    options?: { id: string; text: string }[] 
+  const addQuestion = async (questionData: {
+    type: "mcq" | "saq";
+    question: string;
+    createdBy: string;
+    options?: { id: string; text: string }[]
   }): Promise<Question | null> => {
     // Prevent duplicate submissions
     if (isAddingQuestion) return null;
-    
+
     setIsAddingQuestion(true);
     try {
       const response = await fetch("/api/questions", {
@@ -383,7 +383,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const voteOnMCQ = async (questionId: number, optionId: string) => {
     // Prevent duplicate votes
     if (pendingVotes.has(questionId)) return;
-    
+
     const userId = getCurrentUserId();
     setPendingVotes(prev => new Set(prev).add(questionId));
     try {
@@ -398,13 +398,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "mcq", optionId, userId }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to vote");
       }
-      
+
       const data = await response.json();
-      
+
       // Show toast and update balance if tokens were awarded (first vote on this question)
       if (data.tokensAwarded !== undefined && currencyInfo) {
         const reward = currencyInfo.config.voteReward;
@@ -412,7 +412,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Update balance immediately from response
         setCurrencyInfo(prev => prev ? { ...prev, balance: data.tokensAwarded } : prev);
       }
-      
+
       await refreshQuestions();
     } catch (err) {
       console.error("Error voting:", err);
@@ -431,7 +431,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const voteOnSAQ = async (questionId: number, answerId: string) => {
     // Prevent duplicate votes
     if (pendingVotes.has(questionId)) return;
-    
+
     const userId = getCurrentUserId();
     setPendingVotes(prev => new Set(prev).add(questionId));
     try {
@@ -446,13 +446,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "saq", answerId, userId }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to vote");
       }
-      
+
       const data = await response.json();
-      
+
       // Show toast and update balance if tokens were awarded (first vote on this question)
       if (data.tokensAwarded !== undefined && currencyInfo) {
         const reward = currencyInfo.config.voteReward;
@@ -460,7 +460,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Update balance immediately from response
         setCurrencyInfo(prev => prev ? { ...prev, balance: data.tokensAwarded } : prev);
       }
-      
+
       await refreshQuestions();
     } catch (err) {
       console.error("Error voting:", err);
@@ -479,7 +479,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addSAQAnswer = async (questionId: number, answerText: string) => {
     // Prevent duplicate submissions
     if (pendingAnswers.has(questionId)) return;
-    
+
     const userName = getCurrentUserName();
     const userId = getCurrentUserId();
     setPendingAnswers(prev => new Set(prev).add(questionId));
@@ -490,9 +490,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ text: answerText, createdBy: userName, userId }),
       });
       if (!response.ok) throw new Error("Failed to add answer");
-      
+
       const data = await response.json();
-      
+
       // Show toast and update balance if tokens were awarded
       if (data.tokensAwarded !== undefined && currencyInfo) {
         const reward = currencyInfo.config.answerReward;
@@ -500,7 +500,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Update balance immediately from response
         setCurrencyInfo(prev => prev ? { ...prev, balance: data.tokensAwarded } : prev);
       }
-      
+
       await refreshQuestions();
     } catch (err) {
       console.error("Error adding answer:", err);
@@ -569,11 +569,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     count: number
   ): Promise<number[]> => {
     const userId = getCurrentUserId();
-    
-    // Filter questions by type
-    const filteredQuestions = questions.filter(
-      (q) => questionType === "all" || q.type === questionType
-    );
+
+    // Filter questions by type AND ensure they have community content:
+    // - MCQ: at least one option has votes
+    // - SAQ: at least one answer exists
+    const filteredQuestions = questions.filter((q) => {
+      // First filter by type
+      if (questionType !== "all" && q.type !== questionType) {
+        return false;
+      }
+
+      // Then filter by community content
+      if (q.type === "mcq") {
+        // MCQ must have at least one vote on any option
+        return q.options?.some(opt => opt.votes > 0) ?? false;
+      } else {
+        // SAQ must have at least one answer
+        return (q.answers?.length ?? 0) > 0;
+      }
+    });
     const questionIds = filteredQuestions.map((q) => q.id);
 
     // Determine mode based on global settings

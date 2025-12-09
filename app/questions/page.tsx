@@ -119,7 +119,9 @@ function QuestionBankPageContent() {
                     </div>
 
                     <p className="text-text-secondary-light dark:text-slate-400 text-sm font-normal leading-normal">
-                      Top Answer: {topAnswer.length > 80 ? topAnswer.substring(0, 80) + "..." : topAnswer}
+                      {totalVotes === 0
+                        ? "No answers yet"
+                        : `Top Answer: ${topAnswer.length > 80 ? topAnswer.substring(0, 80) + "..." : topAnswer}`}
                     </p>
 
                     <div className="flex items-center pt-2">
@@ -135,7 +137,7 @@ function QuestionBankPageContent() {
                     <div className="flex items-center justify-between pt-1 text-xs text-text-secondary-light dark:text-text-secondary-dark">
                       <div className="flex items-center gap-1.5">
                         <Icon name="person" size="sm" className="opacity-60" />
-                        <span>Added by <span className="font-medium">{q.createdBy}</span></span>
+                        <span><span className="font-medium">{q.createdBy}</span></span>
                       </div>
                       <span>{totalVotes} votes</span>
                     </div>

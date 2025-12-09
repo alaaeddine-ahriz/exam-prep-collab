@@ -41,6 +41,8 @@ function PracticeQuizPageContent() {
   // Ref to prevent re-fetching questions during the session
   const questionsLoadedRef = useRef(false);
   const questionsRef = useRef<Question[]>([]);
+  // Session-specific seed for shuffling (generated once per session)
+  const sessionSeedRef = useRef(Math.random() * 10000);
 
   // State for question selection
   const [practiceQuestionIds, setPracticeQuestionIds] = useState<number[] | null>(null);
@@ -117,6 +119,26 @@ function PracticeQuizPageContent() {
 
   const currentQuestion = practiceQuestions[currentQuestionIndex];
   const progress = practiceQuestions.length > 0 ? ((currentQuestionIndex + 1) / practiceQuestions.length) * 100 : 0;
+
+  // Shuffle MCQ options - stable per question (uses seeded shuffle based on question index)
+  const shuffledOptions = useMemo(() => {
+    if (currentQuestion?.type === "mcq" && currentQuestion.options) {
+      const options = [...currentQuestion.options];
+      // Fisher-Yates shuffle with seeded randomness based on question id, index, and session
+      // This ensures consistent shuffle per question during the session, but different across sessions
+      const seed = currentQuestion.id + currentQuestionIndex + sessionSeedRef.current;
+      const seededRandom = (i: number) => {
+        const x = Math.sin(seed * 9999 + i) * 10000;
+        return x - Math.floor(x);
+      };
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom(i) * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      return options;
+    }
+    return [];
+  }, [currentQuestion?.id, currentQuestion?.options, currentQuestionIndex]);
 
   // Helper functions that don't depend on hooks
   const getCorrectAnswer = useCallback((question: Question): string => {
@@ -415,9 +437,9 @@ function PracticeQuizPageContent() {
         </h3>
 
         {/* MCQ Options */}
-        {currentQuestion.type === "mcq" && currentQuestion.options && (
+        {currentQuestion.type === "mcq" && shuffledOptions.length > 0 && (
           <div className="flex flex-col gap-3">
-            {currentQuestion.options.map((option) => {
+            {shuffledOptions.map((option) => {
               let optionClassName = "";
               if (showResult && currentQuestion.options) {
                 const topOption = currentQuestion.options.reduce((max, opt) =>
@@ -435,7 +457,7 @@ function PracticeQuizPageContent() {
                   key={option.id}
                   id={option.id}
                   name="answer-options"
-                  label={`${option.id.toUpperCase()}. ${option.text}`}
+                  label={option.text}
                   checked={selectedMCQAnswer === option.id}
                   onChange={() => handleMCQSelect(option.id)}
                   className={optionClassName}

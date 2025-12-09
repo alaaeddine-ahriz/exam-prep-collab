@@ -267,11 +267,31 @@ function ProfilePageContent() {
     setShowEditProfile(true);
   };
 
-  const handleSaveProfile = () => {
-    // In a real app, this would update the user's profile in the backend
-    // For now, we'll just close the sheet
-    setShowEditProfile(false);
-    // Could dispatch to app context or make API call here
+  const handleSaveProfile = async () => {
+    const userId = authUser?.id;
+    if (!userId || !editName.trim()) {
+      setShowEditProfile(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      // Close the sheet - the name update will be reflected on next data refresh
+      setShowEditProfile(false);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      // Still close the sheet but could show an error toast here
+      setShowEditProfile(false);
+    }
   };
 
   return (

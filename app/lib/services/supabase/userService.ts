@@ -21,15 +21,15 @@ function generateId(): string {
 function calculateNewStreak(lastActive: Date, currentStreak: number): number {
   const now = new Date();
   const lastActiveDate = new Date(lastActive);
-  
+
   // Normalize to start of day (in local timezone)
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const lastDay = new Date(lastActiveDate.getFullYear(), lastActiveDate.getMonth(), lastActiveDate.getDate());
-  
+
   // Calculate difference in days
   const diffTime = today.getTime() - lastDay.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) {
     // Same day - streak stays the same (or starts at 1 if it was 0)
     return currentStreak || 1;
@@ -110,7 +110,7 @@ export class SupabaseUserService implements IUserService {
     (history || []).forEach((h: any) => {
       stats.totalAnswered++;
       if (h.is_correct) stats.correctAnswers++;
-      
+
       if (h.question_type === "mcq") {
         stats.mcqAnswered++;
         if (h.is_correct) stats.mcqCorrect++;
@@ -242,6 +242,17 @@ export class SupabaseUserService implements IUserService {
     const { error } = await supabase
       .from("users")
       .update({ exam_date: examDate })
+      .eq("id", userId);
+
+    if (error) throw error;
+  }
+
+  async updateName(userId: string, name: string): Promise<void> {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase
+      .from("users")
+      .update({ name })
       .eq("id", userId);
 
     if (error) throw error;

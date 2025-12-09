@@ -45,6 +45,7 @@ export interface IUserService {
   updateStreak(userId: string, streak: number): Promise<void>;
   updateLastActive(userId: string): Promise<void>;
   updateExamDate(userId: string, examDate: string | null): Promise<void>;
+  updateName(userId: string, name: string): Promise<void>;
 
   // History
   recordHistory(dto: RecordHistoryDTO): Promise<void>;

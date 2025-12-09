@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
+
     // Don't create records for "local-user" in production with Supabase
     if (id === "local-user" && env.dataProvider === "supabase") {
       return NextResponse.json({
@@ -30,26 +30,26 @@ export async function GET(
         examDate: null,
       });
     }
-    
+
     const service = await getDataService();
-    
+
     // Get user's email from the request header if available (set by auth middleware)
     const userEmail = request.headers.get("x-user-email");
-    
+
     let user = await service.users.getUserById(id);
 
     // If user doesn't exist, create them with default values
     // The name will be updated when they take actions
     if (!user) {
       // Extract a display name from the ID or email
-      const displayName = userEmail 
+      const displayName = userEmail
         ? userEmail.split("@")[0]
-        : id.includes("@") 
-          ? id.split("@")[0] 
-          : id === "local-user" 
-            ? "Guest" 
+        : id.includes("@")
+          ? id.split("@")[0]
+          : id === "local-user"
+            ? "Guest"
             : "User";
-      
+
       user = await service.users.createUser({
         id,
         name: displayName,
@@ -70,7 +70,7 @@ export async function GET(
 
 /**
  * PATCH /api/users/[id]
- * Update user settings (e.g., exam_date for cram mode)
+ * Update user settings (e.g., exam_date for cram mode, name for profile)
  */
 export async function PATCH(
   request: NextRequest,
@@ -79,12 +79,19 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { exam_date } = body;
+    const { exam_date, name } = body;
 
     const service = await getDataService();
-    
-    // Update exam_date in database
-    await service.users.updateExamDate(id, exam_date);
+
+    // Update exam_date if provided
+    if (exam_date !== undefined) {
+      await service.users.updateExamDate(id, exam_date);
+    }
+
+    // Update name if provided
+    if (name !== undefined && name.trim()) {
+      await service.users.updateName(id, name.trim());
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

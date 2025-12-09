@@ -30,7 +30,7 @@ export function DailyBonusModal() {
     const result = await claimDailyBonus();
     setClaimResult(result);
     setIsClaiming(false);
-    
+
     if (result.success) {
       // Close after a brief moment to show success
       setTimeout(() => {
@@ -55,9 +55,7 @@ export function DailyBonusModal() {
       <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in duration-300">
         {/* Header with gradient */}
         <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center">
-            <Icon name="toll" className="w-10 h-10 text-white" />
-          </div>
+          <Icon name="redeem" className="text-white" size="3xl" />
           <h2 className="text-2xl font-bold text-white">
             {claimResult?.success ? "Bonus Claimed!" : "Daily Bonus"}
           </h2>

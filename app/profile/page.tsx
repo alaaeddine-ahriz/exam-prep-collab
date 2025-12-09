@@ -360,7 +360,7 @@ function ProfilePageContent() {
         {currencyInfo && (
           <div className="px-4 mt-4">
             <Card
-              className="flex flex-col gap-4 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              className="flex flex-col gap-4 cursor-pointer transition-colors"
               onClick={() => setShowTokenDetails(true)}
             >
               <div className="flex justify-between items-center">
@@ -384,7 +384,7 @@ function ProfilePageContent() {
                     e.stopPropagation();
                     await claimDailyBonus();
                   }}
-                  className="!bg-amber-600 hover:!bg-amber-700"
+                  className="!bg-gradient-to-br !from-amber-400 !to-orange-500 hover:!from-amber-500 hover:!to-orange-600"
                 >
                   <Icon name="redeem" size="sm" />
                   Claim Daily Bonus (+{currencyInfo.config.dailyLoginReward})
@@ -618,14 +618,14 @@ function ProfilePageContent() {
         >
           <div className="p-4 flex flex-col gap-5">
             {/* Current Balance */}
-            <div className="flex items-center justify-between p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50">
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-800/30">
-                  <Icon name="toll" size="lg" className="text-amber-600 dark:text-amber-400" />
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700/50">
+                  <Icon name="toll" size="lg" className="text-text-secondary-light dark:text-text-secondary-dark" />
                 </div>
                 <div>
-                  <p className="text-sm text-amber-700 dark:text-amber-400">Current Balance</p>
-                  <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">
+                  <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Current Balance</p>
+                  <p className="text-2xl font-bold text-text-primary-light dark:text-text-primary-dark">
                     {currencyInfo.balance.toLocaleString()}
                   </p>
                 </div>
@@ -647,6 +647,22 @@ function ProfilePageContent() {
                 </p>
               </div>
             </div>
+
+            {/* Claim Daily Bonus Button */}
+            {currencyInfo.canClaimDailyBonus && (
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={async () => {
+                  await claimDailyBonus();
+                  setShowTokenDetails(false);
+                }}
+                className="!bg-gradient-to-br !from-amber-400 !to-orange-500 hover:!from-amber-500 hover:!to-orange-600"
+              >
+                <Icon name="redeem" size="sm" />
+                Claim Daily Bonus (+{currencyInfo.config.dailyLoginReward})
+              </Button>
+            )}
 
             {/* Earning Section */}
             <div className="flex flex-col gap-3">
@@ -701,21 +717,6 @@ function ProfilePageContent() {
               </div>
             </div>
 
-            {/* Claim Daily Bonus Button */}
-            {currencyInfo.canClaimDailyBonus && (
-              <Button
-                variant="primary"
-                fullWidth
-                onClick={async () => {
-                  await claimDailyBonus();
-                  setShowTokenDetails(false);
-                }}
-                className="!bg-amber-600 hover:!bg-amber-700 mt-2"
-              >
-                <Icon name="redeem" size="sm" />
-                Claim Daily Bonus (+{currencyInfo.config.dailyLoginReward})
-              </Button>
-            )}
           </div>
         </BottomSheet>
       )}

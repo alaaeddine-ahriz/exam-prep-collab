@@ -32,7 +32,7 @@ function QuestionDetailsPageContent() {
     addSAQAnswer,
     questions,
     getUserVoteForQuestion,
-    loading
+    initialLoading
   } = useApp();
   const { user: authUser } = useAuth();
 
@@ -62,7 +62,7 @@ function QuestionDetailsPageContent() {
     }
   }, [userVote]);
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background-light dark:bg-background-dark">
         <div className="flex flex-col items-center gap-3">

@@ -36,7 +36,8 @@ interface AppContextType {
   questions: Question[];
   user: User | null;
   userVotes: UserVotes;
-  loading: boolean;
+  initialLoading: boolean;  // True only during first app load
+  isRefreshing: boolean;    // True when refreshing data in background
   error: string | null;
   currentUserName: string;
 
@@ -97,7 +98,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mastery, setMastery] = useState<QuestionMastery[]>([]);
   const [masteryStats, setMasteryStats] = useState<MasteryStats | null>(null);
   const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Track pending operations to prevent duplicates
@@ -289,13 +291,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [getCurrentUserId, questions.length]);
 
-  // Initial load and reload when auth user changes
+  // Track if initial load has completed
+  const initialLoadCompleteRef = useRef(false);
+  // Track the auth user ID that was used for the initial load
+  const loadedForUserRef = useRef<string | null>(null);
+
+  // Initial load - runs only once on mount, and when auth user changes
   useEffect(() => {
-    // Don't fetch user-specific data until auth is ready
+    // Don't fetch until auth is ready
     if (authLoading) return;
 
+    // Skip if already loaded for this user (prevents duplicate loads on re-renders)
+    const currentUserId = authUser?.id || null;
+    if (initialLoadCompleteRef.current && loadedForUserRef.current === currentUserId) {
+      return;
+    }
+
     const loadData = async () => {
-      setLoading(true);
+      const isInitialLoad = !initialLoadCompleteRef.current;
+      if (isInitialLoad) {
+        setInitialLoading(true);
+      }
+
       // Always fetch questions (not user-specific)
       await refreshQuestions();
 
@@ -308,10 +325,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setUserVotes({});
         setCurrencyInfo(null);
       }
-      setLoading(false);
+
+      setInitialLoading(false);
+      initialLoadCompleteRef.current = true;
+      loadedForUserRef.current = currentUserId;
     };
     loadData();
-  }, [refreshQuestions, refreshUser, refreshUserVotes, refreshCurrency, authUser?.id, authLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser?.id, authLoading]);
 
   // Load mastery after questions are loaded
   useEffect(() => {
@@ -626,7 +647,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     userVotes,
     mastery,
     masteryStats,
-    loading,
+    initialLoading,
+    isRefreshing,
     error,
     currentUserName: getCurrentUserName(),
     // Study mode

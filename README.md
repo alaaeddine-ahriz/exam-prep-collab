@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ExamPrep
 
-## Getting Started
+A collaborative exam preparation platform built for students. Study smarter together by sharing questions, voting on answers, and practicing with spaced repetition.
 
-First, run the development server:
+## ✨ Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **📚 Question Bank** - Browse and search past exam questions organized by topic
+- **👍 Voting System** - Vote on the best answers for MCQs and solutions for short answer questions
+- **🎯 Practice Mode** - Test your knowledge with customizable practice sessions
+- **🧠 Spaced Repetition** - Smart mastery tracking helps you focus on what you need to review
+- **🏆 Leaderboard** - Compete with classmates and track your contributions
+- **🎁 Daily Bonus** - Earn tokens for consistent practice
+- **📱 PWA Support** - Install as a standalone app on your device
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org/) with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **PWA**: next-pwa
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Supabase account
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd exam-prep-v2
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   
+   Copy the example env file and fill in your Supabase credentials:
+   ```bash
+   cp "env copy.example" .env.local
+   ```
+   
+   Required environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## 📁 Project Structure
+
+```
+exam-prep-v2/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── components/        # Reusable UI components
+│   ├── context/           # React context providers
+│   ├── lib/               # Utilities and services
+│   ├── practice/          # Practice mode pages
+│   ├── profile/           # User profile page
+│   └── questions/         # Question bank pages
+├── admin/                  # Admin tools
+├── config/                 # App configuration
+├── data/                   # Local data files
+├── db/                     # Database schema and migrations
+├── public/                 # Static assets
+└── scripts/                # Utility scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📜 Available Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:seed` | Seed the database |
+| `npm run generate-icons` | Generate PWA icons |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📄 License
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is for educational purposes.

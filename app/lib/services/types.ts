@@ -214,6 +214,7 @@ export type TransactionType =
   | "daily_login" 
   | "practice" 
   | "ai_verify"
+  | "ai_explain"
   | "initial_balance";
 
 export interface DBUserBalance {
@@ -260,5 +261,28 @@ export interface PracticeSessionInfo {
   usedToday: number;
   freeRemaining: number;
   requiresPayment: boolean;
+}
+
+// Explanation types
+export interface DBQuestionExplanation {
+  id: number;
+  question_id: number;
+  user_id: string;
+  explanation: string;
+  created_at: string;
+}
+
+export interface QuestionExplanation {
+  id: number;
+  questionId: number;
+  userId: string;
+  explanation: string;
+  createdAt: Date;
+}
+
+export interface CreateExplanationDTO {
+  questionId: number;
+  userId: string;
+  explanation: string;
 }
 

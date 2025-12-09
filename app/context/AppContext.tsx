@@ -25,6 +25,7 @@ interface CurrencyInfo {
     currencyName: string;
     practiceSessionCost: number;
     aiVerificationCost: number;
+    aiExplanationCost: number;
     dailyLoginReward: number;
     voteReward: number;
     answerReward: number;

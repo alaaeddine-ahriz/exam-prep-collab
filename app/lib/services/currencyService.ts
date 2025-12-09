@@ -653,6 +653,19 @@ export async function spendAIVerificationTokens(userId: string): Promise<{ succe
 }
 
 /**
+ * Spend tokens for AI explanation
+ * Returns success: false if insufficient balance
+ */
+export async function spendAIExplanationTokens(userId: string): Promise<{ success: boolean; balance: UserBalance }> {
+  return spendTokens(
+    userId,
+    currencyConfig.costs.aiExplanation,
+    "ai_explain",
+    "AI answer explanation"
+  );
+}
+
+/**
  * Get the currency configuration
  */
 export function getCurrencyConfig() {

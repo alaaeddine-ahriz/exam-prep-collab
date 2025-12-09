@@ -24,3 +24,13 @@ export interface AnswerVerificationResponse {
   explanation: string;
   matchedAnswer?: string; // Which correct answer it matched, if any
 }
+
+export interface ExplanationRequest {
+  questionText: string;
+  correctAnswer: string;
+}
+
+export interface ExplanationResponse {
+  explanation: string;
+}
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Icon,
@@ -12,12 +12,20 @@ import {
   QuestionTypeBadge,
   ProtectedRoute,
   useTokenToast,
+  BottomSheet,
 } from "../../components";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { Question } from "../../lib/services/types";
 import { getTopAnswer } from "../../lib/utils";
-import { verifyAnswer as verifyAnswerAI, AnswerVerificationResponse } from "../../lib/services/ai/client";
+import {
+  verifyAnswer as verifyAnswerAI,
+  AnswerVerificationResponse,
+  generateExplanation,
+  getExplanations,
+  saveExplanation,
+  SavedExplanation,
+} from "../../lib/services/ai/client";
 
 function PracticeQuizPageContent() {
   const router = useRouter();
@@ -100,8 +108,50 @@ function PracticeQuizPageContent() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [aiVerification, setAiVerification] = useState<AnswerVerificationResponse | null>(null);
 
+  // Explanation state
+  const [showExplanationSheet, setShowExplanationSheet] = useState(false);
+  const [savedExplanations, setSavedExplanations] = useState<SavedExplanation[]>([]);
+  const [currentExplanation, setCurrentExplanation] = useState<string | null>(null);
+  const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
+  const [isLoadingExplanations, setIsLoadingExplanations] = useState(false);
+
   const currentQuestion = practiceQuestions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / practiceQuestions.length) * 100;
+  const progress = practiceQuestions.length > 0 ? ((currentQuestionIndex + 1) / practiceQuestions.length) * 100 : 0;
+
+  // Helper functions that don't depend on hooks
+  const getCorrectAnswer = useCallback((question: Question): string => {
+    return getTopAnswer(question);
+  }, []);
+
+  const getTopAnswers = useCallback((question: Question): string[] => {
+    if (question.type === "saq" && question.answers && question.answers.length > 0) {
+      // Get top 3 answers sorted by votes
+      return question.answers
+        .sort((a, b) => b.votes - a.votes)
+        .slice(0, 3)
+        .map(a => a.text);
+    }
+    return [getTopAnswer(question)];
+  }, []);
+
+  // Load saved explanations when opening the bottom sheet
+  const handleOpenExplanationSheet = useCallback(async () => {
+    if (!currentQuestion) return;
+    
+    setShowExplanationSheet(true);
+    setIsLoadingExplanations(true);
+    setCurrentExplanation(null);
+    
+    try {
+      const explanations = await getExplanations(currentQuestion.id);
+      setSavedExplanations(explanations);
+    } catch (error) {
+      console.error("Error loading explanations:", error);
+      setSavedExplanations([]);
+    } finally {
+      setIsLoadingExplanations(false);
+    }
+  }, [currentQuestion]);
 
   // Loading state
   if (isLoadingQuestions) {
@@ -128,21 +178,6 @@ function PracticeQuizPageContent() {
       </div>
     );
   }
-
-  const getCorrectAnswer = (question: Question): string => {
-    return getTopAnswer(question);
-  };
-
-  const getTopAnswers = (question: Question): string[] => {
-    if (question.type === "saq" && question.answers && question.answers.length > 0) {
-      // Get top 3 answers sorted by votes
-      return question.answers
-        .sort((a, b) => b.votes - a.votes)
-        .slice(0, 3)
-        .map(a => a.text);
-    }
-    return [getTopAnswer(question)];
-  };
 
   const checkMCQAnswer = (): boolean => {
     if (currentQuestion.type === "mcq" && currentQuestion.options) {
@@ -250,6 +285,68 @@ function PracticeQuizPageContent() {
     });
   };
 
+  // Generate a new AI explanation
+  const handleGenerateExplanation = async () => {
+    if (!currentQuestion || !userId) return;
+    
+    setIsGeneratingExplanation(true);
+    setCurrentExplanation(null);
+    
+    try {
+      const correctAnswer = getCorrectAnswer(currentQuestion);
+      const result = await generateExplanation(
+        currentQuestion.question,
+        correctAnswer,
+        userId
+      );
+      
+      if (result.insufficientBalance) {
+        showTokenToast(0, "Insufficient tokens");
+        return;
+      }
+      
+      // Handle token deduction
+      if (result.newBalance !== undefined && currencyInfo) {
+        const cost = currencyInfo.config.aiExplanationCost;
+        showTokenToast(-cost, "AI explanation");
+        await refreshCurrency();
+      }
+      
+      setCurrentExplanation(result.explanation);
+    } catch (error) {
+      console.error("Error generating explanation:", error);
+      setCurrentExplanation("Unable to generate explanation at this time.");
+    } finally {
+      setIsGeneratingExplanation(false);
+    }
+  };
+
+  // Save the current explanation
+  const handleSaveExplanation = async () => {
+    if (!currentQuestion || !userId || !currentExplanation) return;
+    
+    try {
+      const saved = await saveExplanation(
+        currentQuestion.id,
+        userId,
+        currentExplanation
+      );
+      
+      if (saved) {
+        setSavedExplanations(prev => [saved, ...prev]);
+        setCurrentExplanation(null);
+        showTokenToast(0, "Explanation saved");
+      }
+    } catch (error) {
+      console.error("Error saving explanation:", error);
+    }
+  };
+
+  // Discard the current explanation
+  const handleDiscardExplanation = () => {
+    setCurrentExplanation(null);
+  };
+
   const handleNext = () => {
     if (currentQuestionIndex < practiceQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
@@ -257,6 +354,10 @@ function PracticeQuizPageContent() {
       setSaqAnswer("");
       setShowResult(false);
       setAiVerification(null);
+      // Reset explanation state
+      setShowExplanationSheet(false);
+      setSavedExplanations([]);
+      setCurrentExplanation(null);
     } else {
       // Quiz complete - show results
       router.push(`/practice/results?correct=${score.correct}&total=${practiceQuestions.length}`);
@@ -412,6 +513,17 @@ function PracticeQuizPageContent() {
                 </p>
               </div>
             )}
+
+            {/* Explain with AI Button */}
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={handleOpenExplanationSheet}
+              className="mt-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 hover:!from-amber-500 hover:!to-orange-600"
+            >
+              <Icon name="lightbulb" size="sm" />
+              Explain with AI
+            </Button>
           </div>
         )}
       </main>
@@ -465,6 +577,127 @@ function PracticeQuizPageContent() {
           </Button>
         )}
       </div>
+
+      {/* Explanation Bottom Sheet */}
+      <BottomSheet
+        isOpen={showExplanationSheet}
+        onClose={() => setShowExplanationSheet(false)}
+        title="AI Explanation"
+      >
+        <div className="p-4 space-y-4">
+          {/* Loading state */}
+          {isLoadingExplanations && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+            </div>
+          )}
+
+          {/* Current Generated Explanation */}
+          {!isLoadingExplanations && currentExplanation && (
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon name="auto_awesome" size="sm" className="text-primary" />
+                  <span className="text-sm font-medium text-primary">New Explanation</span>
+                </div>
+                <p className="text-text-primary-light dark:text-text-primary-dark">
+                  {currentExplanation}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={handleDiscardExplanation}
+                >
+                  Discard
+                </Button>
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={handleSaveExplanation}
+                >
+                  <Icon name="bookmark" size="sm" />
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Generating state */}
+          {!isLoadingExplanations && isGeneratingExplanation && (
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+              <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                Thinking...
+              </p>
+            </div>
+          )}
+
+          {/* Saved Explanations */}
+          {!isLoadingExplanations && !currentExplanation && !isGeneratingExplanation && (
+            <>
+              {savedExplanations.length > 0 ? (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
+                    Saved Explanations ({savedExplanations.length})
+                  </h3>
+                  {savedExplanations.map((exp) => (
+                    <div
+                      key={exp.id}
+                      className="p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark"
+                    >
+                      <p className="text-text-primary-light dark:text-text-primary-dark">
+                        {exp.explanation}
+                      </p>
+                      <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2">
+                        {new Date(exp.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                  <Button
+                    variant="primary"
+                    fullWidth
+                    onClick={handleGenerateExplanation}
+                    disabled={isGeneratingExplanation}
+                  >
+                    <Icon name="auto_awesome" size="sm" />
+                    New Explanation
+                    {currencyInfo && (
+                      <span className="text-sm opacity-70 ml-1">
+                        ({currencyInfo.config.aiExplanationCost} {currencyInfo.config.currencyName})
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center py-4">
+                    <Icon name="lightbulb" size="xl" className="text-text-secondary-light dark:text-text-secondary-dark mb-2" />
+                    <p className="text-text-secondary-light dark:text-text-secondary-dark">
+                      No explanations saved yet for this question.
+                    </p>
+                  </div>
+                  <Button
+                    variant="primary"
+                    fullWidth
+                    onClick={handleGenerateExplanation}
+                    disabled={isGeneratingExplanation}
+                  >
+                    <Icon name="auto_awesome" size="sm" />
+                    Generate Explanation
+                    {currencyInfo && (
+                      <span className="text-sm opacity-70 ml-1">
+                        ({currencyInfo.config.aiExplanationCost} {currencyInfo.config.currencyName})
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </BottomSheet>
     </div>
   );
 }

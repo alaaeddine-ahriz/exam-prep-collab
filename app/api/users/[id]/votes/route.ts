@@ -10,16 +10,8 @@ export async function GET(
     const { id } = await params;
     const service = await getDataService();
 
-    // Get all questions and check user's vote on each
-    const questions = await service.questions.getAllQuestions();
-    const votes: Record<number, { optionId?: string; answerId?: string }> = {};
-
-    for (const question of questions) {
-      const vote = await service.questions.getUserVote(id, question.id);
-      if (vote) {
-        votes[question.id] = vote;
-      }
-    }
+    // Fetch all votes in a single query instead of N sequential queries
+    const votes = await service.questions.getAllUserVotes(id);
 
     return NextResponse.json(votes);
   } catch (error) {

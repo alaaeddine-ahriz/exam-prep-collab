@@ -24,7 +24,9 @@ function QuestionBankPageContent() {
   const [filterType, setFilterType] = useState<"all" | "mcq" | "saq">("all");
 
   const filteredQuestions = questions.filter((q) => {
-    const matchesSearch = q.question.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = q.question.toLowerCase().includes(searchLower) ||
+      q.createdBy.toLowerCase().includes(searchLower);
     const matchesType = filterType === "all" || q.type === filterType;
     return matchesSearch && matchesType;
   });

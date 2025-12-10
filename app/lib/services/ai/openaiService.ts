@@ -229,7 +229,7 @@ Evaluate if the student's answer is semantically correct.`;
 
     // Build system prompt based on whether options are provided (MCQ vs SAQ)
     const isMCQ = options && options.length > 0;
-    
+
     const systemPrompt = isMCQ
       ? `You are a helpful tutor that explains multiple choice questions in a simple, clear way.
 Your task is to:
@@ -260,7 +260,7 @@ Respond with ONLY a JSON object with this exact format:
     let userPrompt: string;
     if (isMCQ) {
       const optionsList = options.map(o => `${o.id.toUpperCase()}. ${o.text}`).join("\n");
-      userPrompt = `Explain why the correct answer is right and why the other options are wrong.
+      userPrompt = `Explain why the correct answer is right.
 
 Question: ${questionText}
 

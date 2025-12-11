@@ -8,6 +8,8 @@ import {
   GrammarFixResponse,
   AnswerVerificationRequest,
   AnswerVerificationResponse,
+  ExplanationRequest,
+  ExplanationResponse,
 } from "./types";
 
 export class OpenAIService implements IAIService {
@@ -219,4 +221,80 @@ Evaluate if the student's answer is semantically correct.`;
       matchedAnswer: isCorrect ? bestMatch : undefined,
     };
   }
+
+  async generateExplanation(
+    request: ExplanationRequest
+  ): Promise<ExplanationResponse> {
+    const { questionText, correctAnswer, options } = request;
+
+    // Build system prompt based on whether options are provided (MCQ vs SAQ)
+    const isMCQ = options && options.length > 0;
+
+    const systemPrompt = isMCQ
+      ? `You are a helpful tutor that explains multiple choice questions in a simple, clear way.
+Your task is to:
+1. Explain why the correct answer is right
+2. Briefly explain why the other options are wrong or less accurate
+3. Use simple reasoning and avoid jargon
+4. Keep the explanation concise (3-5 sentences max)
+5. Be direct and easy to understand
+
+Respond with ONLY a JSON object with this exact format:
+{
+  "explanation": "your clear explanation here"
+}`
+      : `You are a helpful tutor that explains why answers are correct in a simple, clear way.
+Your task is to:
+1. Provide a short, clear explanation of why the answer is correct
+2. Use simple reasoning and avoid jargon
+3. Focus only on the key idea - no unnecessary theory
+4. Keep the explanation concise (2-4 sentences max)
+5. Be direct and easy to understand
+
+Respond with ONLY a JSON object with this exact format:
+{
+  "explanation": "your clear explanation here"
+}`;
+
+    // Build user prompt with options if available
+    let userPrompt: string;
+    if (isMCQ) {
+      const optionsList = options.map(o => `${o.id.toUpperCase()}. ${o.text}`).join("\n");
+      userPrompt = `Explain why the correct answer is right.
+
+Question: ${questionText}
+
+Options:
+${optionsList}
+
+Correct answer: ${correctAnswer}`;
+    } else {
+      userPrompt = `Provide a short, clear explanation of why the following answer is correct. Use simple reasoning, avoid jargon, and focus only on the key idea.
+
+Question: ${questionText}
+Correct answer: ${correctAnswer}`;
+    }
+
+    try {
+      const response = await this.callOpenAI(
+        [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        true
+      );
+
+      const result = JSON.parse(response);
+
+      return {
+        explanation: result.explanation || "Unable to generate explanation.",
+      };
+    } catch (error) {
+      console.error("Error generating explanation:", error);
+      return {
+        explanation: "Unable to generate explanation at this time.",
+      };
+    }
+  }
 }
+

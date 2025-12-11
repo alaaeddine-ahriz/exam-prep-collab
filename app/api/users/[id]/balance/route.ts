@@ -32,6 +32,7 @@ export async function GET(
           currencyName: config.currency.name,
           practiceSessionCost: config.costs.practiceSession,
           aiVerificationCost: config.costs.aiVerification,
+          aiExplanationCost: config.costs.aiExplanation,
           dailyLoginReward: config.rewards.dailyLogin,
           voteReward: config.rewards.castVote,
           answerReward: config.rewards.submitAnswer,
@@ -57,6 +58,7 @@ export async function GET(
         currencyName: config.currency.name,
         practiceSessionCost: config.costs.practiceSession,
         aiVerificationCost: config.costs.aiVerification,
+        aiExplanationCost: config.costs.aiExplanation,
         dailyLoginReward: config.rewards.dailyLogin,
         voteReward: config.rewards.castVote,
         answerReward: config.rewards.submitAnswer,
@@ -75,7 +77,7 @@ export async function GET(
 /**
  * POST /api/users/[id]/balance
  * Spend tokens for a specific action
- * Body: { type: "practice" | "ai_verify", amount?: number }
+ * Body: { type: "practice" | "ai_verify" | "ai_explain", amount?: number }
  */
 export async function POST(
   request: NextRequest,
@@ -98,6 +100,10 @@ export async function POST(
       case "ai_verify":
         amount = config.costs.aiVerification;
         description = "AI answer verification";
+        break;
+      case "ai_explain":
+        amount = config.costs.aiExplanation;
+        description = "AI answer explanation";
         break;
       default:
         return NextResponse.json(

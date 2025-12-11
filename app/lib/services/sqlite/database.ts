@@ -125,7 +125,7 @@ export function initializeDatabase(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,
       amount INTEGER NOT NULL,
-      type TEXT NOT NULL CHECK(type IN ('vote', 'answer', 'daily_login', 'practice', 'ai_verify', 'initial_balance')),
+      type TEXT NOT NULL CHECK(type IN ('vote', 'answer', 'daily_login', 'practice', 'ai_verify', 'ai_explain', 'initial_balance')),
       description TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -139,6 +139,17 @@ export function initializeDatabase(): void {
       session_count INTEGER NOT NULL DEFAULT 1,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       UNIQUE(user_id, session_date)
+    );
+
+    -- Question Explanations table (AI-generated explanations)
+    CREATE TABLE IF NOT EXISTS question_explanations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      question_id INTEGER NOT NULL,
+      user_id TEXT NOT NULL,
+      explanation TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     -- Create indexes for performance
@@ -157,6 +168,9 @@ export function initializeDatabase(): void {
     CREATE INDEX IF NOT EXISTS idx_currency_transactions_type ON currency_transactions(type);
     CREATE INDEX IF NOT EXISTS idx_currency_transactions_created ON currency_transactions(created_at);
     CREATE INDEX IF NOT EXISTS idx_daily_practice_sessions_user_date ON daily_practice_sessions(user_id, session_date);
+    CREATE INDEX IF NOT EXISTS idx_question_explanations_question ON question_explanations(question_id);
+    CREATE INDEX IF NOT EXISTS idx_question_explanations_user ON question_explanations(user_id);
+    CREATE INDEX IF NOT EXISTS idx_question_explanations_created ON question_explanations(created_at DESC);
   `);
 }
 

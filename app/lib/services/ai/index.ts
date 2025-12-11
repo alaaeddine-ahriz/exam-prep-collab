@@ -39,3 +39,4 @@ export function getAIService(): IAIService | null {
 export function isAIEnabled(): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
+

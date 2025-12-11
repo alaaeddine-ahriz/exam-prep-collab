@@ -11,7 +11,8 @@
   },
   "costs": {
     "practiceSession": 15,
-    "aiVerification": 20
+    "aiVerification": 20,
+    "aiExplanation": 30
   },
   "limits": {
     "freePracticeSessionsPerDay": 3

@@ -7,6 +7,8 @@ import {
   GrammarFixResponse,
   AnswerVerificationRequest,
   AnswerVerificationResponse,
+  ExplanationRequest,
+  ExplanationResponse,
 } from "./types";
 
 export interface IAIService {
@@ -19,4 +21,10 @@ export interface IAIService {
    * Verify if a user's answer matches the correct answers using AI
    */
   verifyAnswer(request: AnswerVerificationRequest): Promise<AnswerVerificationResponse>;
+
+  /**
+   * Generate a simple explanation of why an answer is correct
+   */
+  generateExplanation(request: ExplanationRequest): Promise<ExplanationResponse>;
 }
+

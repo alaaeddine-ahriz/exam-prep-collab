@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS currency_transactions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   amount INTEGER NOT NULL,
-  type TEXT NOT NULL CHECK(type IN ('vote', 'answer', 'daily_login', 'practice', 'ai_verify', 'initial_balance')),
+  type TEXT NOT NULL CHECK(type IN ('vote', 'answer', 'daily_login', 'practice', 'ai_verify', 'ai_explain', 'initial_balance')),
   description TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );

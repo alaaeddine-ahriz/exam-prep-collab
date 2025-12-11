@@ -160,3 +160,143 @@ export function isAILikelyEnabled(): boolean {
   // The actual API will gracefully fail if not configured
   return true;
 }
+
+/**
+ * Explanation response from the API
+ */
+export interface ExplanationResult {
+  explanation: string;
+  insufficientBalance?: boolean;
+  newBalance?: number;
+}
+
+/**
+ * Generate an AI explanation for why an answer is correct
+ * @param questionText The question text
+ * @param correctAnswer The correct answer text
+ * @param userId Optional user ID for token deduction
+ * @param options Optional MCQ options for context
+ * @returns Explanation result with optional balance info
+ */
+export async function generateExplanation(
+  questionText: string,
+  correctAnswer: string,
+  userId?: string,
+  options?: { id: string; text: string }[]
+): Promise<ExplanationResult> {
+  try {
+    const response = await fetch("/api/ai/explain", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        questionText,
+        correctAnswer,
+        userId,
+        options,
+      }),
+    });
+
+    if (response.status === 402) {
+      // Insufficient balance
+      const data = await response.json();
+      return {
+        explanation: "Insufficient tokens to generate explanation.",
+        insufficientBalance: true,
+        newBalance: data.balance,
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        explanation: "Unable to generate explanation at this time.",
+      };
+    }
+
+    const data = await response.json();
+    return {
+      explanation: data.explanation,
+      newBalance: data.newBalance,
+    };
+  } catch (error) {
+    console.error("Failed to generate explanation:", error);
+    return {
+      explanation: "Unable to generate explanation at this time.",
+    };
+  }
+}
+
+/**
+ * Saved explanation type
+ */
+export interface SavedExplanation {
+  id: number;
+  questionId: number;
+  userId: string;
+  explanation: string;
+  createdAt: Date;
+}
+
+/**
+ * Get saved explanations for a question
+ * @param questionId The question ID
+ * @returns Array of saved explanations
+ */
+export async function getExplanations(questionId: number): Promise<SavedExplanation[]> {
+  try {
+    const response = await fetch(`/api/questions/${questionId}/explanations`);
+    
+    if (!response.ok) {
+      return [];
+    }
+    
+    const data = await response.json();
+    return data.map((item: SavedExplanation) => ({
+      ...item,
+      createdAt: new Date(item.createdAt),
+    }));
+  } catch (error) {
+    console.error("Failed to fetch explanations:", error);
+    return [];
+  }
+}
+
+/**
+ * Save an explanation for a question
+ * @param questionId The question ID
+ * @param userId The user ID
+ * @param explanation The explanation text
+ * @returns The saved explanation or null on error
+ */
+export async function saveExplanation(
+  questionId: number,
+  userId: string,
+  explanation: string
+): Promise<SavedExplanation | null> {
+  try {
+    const response = await fetch(`/api/questions/${questionId}/explanations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        explanation,
+      }),
+    });
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const data = await response.json();
+    return {
+      ...data,
+      createdAt: new Date(data.createdAt),
+    };
+  } catch (error) {
+    console.error("Failed to save explanation:", error);
+    return null;
+  }
+}

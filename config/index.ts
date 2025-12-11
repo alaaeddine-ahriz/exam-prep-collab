@@ -14,6 +14,7 @@ export interface CurrencyConfig {
   costs: {
     practiceSession: number;
     aiVerification: number;
+    aiExplanation: number;
   };
   limits: {
     freePracticeSessionsPerDay: number;
@@ -28,5 +29,6 @@ export type TransactionType =
   | "daily_login" 
   | "practice" 
   | "ai_verify"
+  | "ai_explain"
   | "initial_balance";
 

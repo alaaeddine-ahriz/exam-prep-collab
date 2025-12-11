@@ -24,3 +24,14 @@ export interface AnswerVerificationResponse {
   explanation: string;
   matchedAnswer?: string; // Which correct answer it matched, if any
 }
+
+export interface ExplanationRequest {
+  questionText: string;
+  correctAnswer: string;
+  options?: { id: string; text: string }[]; // MCQ options for context
+}
+
+export interface ExplanationResponse {
+  explanation: string;
+}
+

@@ -11,11 +11,11 @@
   },
   "costs": {
     "practiceSession": 15,
-    "aiVerification": 20,
+    "aiVerification": 1,
     "aiExplanation": 30
   },
   "limits": {
-    "freePracticeSessionsPerDay": 3
+    "freePracticeSessionsPerDay": 5
   }
 }
 
